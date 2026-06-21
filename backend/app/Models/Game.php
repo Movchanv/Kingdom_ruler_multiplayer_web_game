@@ -61,4 +61,20 @@ class Game extends Model
     {
         return $this->hasMany(ActionLog::class);
     }
+
+    /**
+     * @return HasMany<LawVote, $this>
+     */
+    public function lawVotes(): HasMany
+    {
+        return $this->hasMany(LawVote::class);
+    }
+
+    /**
+     * @return HasMany<ChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
 }

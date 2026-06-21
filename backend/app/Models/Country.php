@@ -38,4 +38,20 @@ class Country extends Model
     {
         return $this->hasMany(Player::class);
     }
+
+    /**
+     * @return HasMany<LawVote, $this>
+     */
+    public function lawVotes(): HasMany
+    {
+        return $this->hasMany(LawVote::class);
+    }
+
+    /**
+     * @return HasMany<ChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
 }

@@ -69,4 +69,20 @@ class Town extends Model
             ->withPivot('amount', 'capacity')
             ->withTimestamps();
     }
+
+    /**
+     * @return HasMany<TownBuilding, $this>
+     */
+    public function townBuildings(): HasMany
+    {
+        return $this->hasMany(TownBuilding::class);
+    }
+
+    /**
+     * @return HasMany<TownLaw, $this>
+     */
+    public function townLaws(): HasMany
+    {
+        return $this->hasMany(TownLaw::class);
+    }
 }
