@@ -1,0 +1,121 @@
+name: medieval-realm-prod
+
+services:
+  laravel:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:prod
+    restart: always
+    working_dir: /var/www/html
+    command: >
+      sh -c "php artisan migrate --force
+      && php artisan config:cache
+      && php artisan route:cache
+      && php artisan event:cache
+      && php-fpm"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - realm
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - laravel
+      - vue
+      - reverb
+    networks:
+      - realm
+
+  vue:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_MODE: production
+    image: medieval-realm/frontend:prod
+    restart: always
+    networks:
+      - realm
+
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:prod
+    restart: always
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
+
+  horizon:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:prod
+    restart: always
+    command: php artisan horizon
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-medieval_realm}
+      POSTGRES_USER: ${DB_USERNAME:-medieval}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in the shell or a root .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-medieval} -d ${DB_DATABASE:-medieval_realm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - realm
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - realm
+
+networks:
+  realm:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

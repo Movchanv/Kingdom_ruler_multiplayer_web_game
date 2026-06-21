@@ -1,0 +1,116 @@
+name: medieval-realm
+
+services:
+  laravel:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:latest
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: sh -c "php artisan migrate --force && php-fpm"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - realm
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - laravel
+    networks:
+      - realm
+  vue:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: medieval-realm/frontend:latest
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - realm
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: medieval_realm
+      POSTGRES_USER: medieval
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medieval -d medieval_realm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - realm
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - realm
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:latest
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8080:8080"
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
+  horizon:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:latest
+    restart: unless-stopped
+    command: php artisan horizon
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
+
+networks:
+  realm:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

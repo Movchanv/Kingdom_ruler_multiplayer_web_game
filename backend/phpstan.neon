@@ -1,0 +1,13 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - app
+        - routes
+        - database
+    tmpDir: storage/phpstan
+    # Laravel's PHPDoc return types (e.g. Sanctum tokens) are not always certain,
+    # so keep defensive runtime checks without false "always true" reports.
+    treatPhpDocTypesAsCertain: false
