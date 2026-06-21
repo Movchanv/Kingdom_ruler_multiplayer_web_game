@@ -4,29 +4,34 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\GameStatus;
+use App\Enums\EventType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Game extends Model
+class Event extends Model
 {
     protected $fillable = [
+        'type',
         'name',
-        'status',
-        'config',
-        'started_at',
-        'ended_at',
+        'description',
+        'effects',
+        'weight',
+        'starts_at',
+        'ends_at',
+        'is_active',
         'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => GameStatus::class,
-            'config' => 'array',
-            'started_at' => 'datetime',
-            'ended_at' => 'datetime',
+            'type' => EventType::class,
+            'effects' => 'array',
+            'weight' => 'integer',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -36,22 +41,6 @@ class Game extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * @return HasMany<Player, $this>
-     */
-    public function players(): HasMany
-    {
-        return $this->hasMany(Player::class);
-    }
-
-    /**
-     * @return HasMany<Town, $this>
-     */
-    public function towns(): HasMany
-    {
-        return $this->hasMany(Town::class);
     }
 
     /**

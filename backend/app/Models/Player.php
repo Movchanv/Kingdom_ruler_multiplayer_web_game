@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Player extends Model
@@ -64,5 +65,13 @@ class Player extends Model
     public function town(): HasOne
     {
         return $this->hasOne(Town::class);
+    }
+
+    /**
+     * @return HasMany<ActionLog, $this>
+     */
+    public function actionLogs(): HasMany
+    {
+        return $this->hasMany(ActionLog::class);
     }
 }
