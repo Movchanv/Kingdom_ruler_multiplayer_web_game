@@ -5,15 +5,45 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTO\Auth\LoginData;
+use App\DTO\Auth\RegisterData;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
 final class AuthService
 {
+    public const PRIVACY_POLICY_VERSION = '1.0';
+
     public function __construct(private readonly UserRepositoryInterface $users) {}
+
+    /**
+     * Create an account, trigger the email-verification mail and issue a token.
+     *
+     * @return array{user: User, token: string}
+     */
+    public function register(RegisterData $data): array
+    {
+        /** @var User $user */
+        $user = $this->users->create([
+            'username' => $data->username,
+            'email' => $data->email,
+            'password' => $data->password,
+            'country' => $data->country,
+            'date_of_birth' => $data->dateOfBirth,
+            'gender' => $data->gender,
+            'terms_accepted_at' => now(),
+            'privacy_policy_version' => self::PRIVACY_POLICY_VERSION,
+        ]);
+
+        event(new Registered($user));
+
+        $token = $user->createToken($data->deviceName)->plainTextToken;
+
+        return ['user' => $user, 'token' => $token];
+    }
 
     /**
      * @return array{user: User, token: string}

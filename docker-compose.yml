@@ -76,6 +76,14 @@ services:
       retries: 10
     networks:
       - realm
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - realm
   reverb:
     build:
       context: ./backend

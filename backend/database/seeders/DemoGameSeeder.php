@@ -204,12 +204,26 @@ class DemoGameSeeder extends Seeder
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@medieval-realm.test'],
-            ['name' => 'Admin', 'password' => 'password', 'role' => UserRole::Admin],
+            [
+                'username' => 'admin',
+                'password' => 'password',
+                'role' => UserRole::Admin,
+                'email_verified_at' => now(),
+                'terms_accepted_at' => now(),
+                'privacy_policy_version' => '1.0',
+            ],
         );
 
         $playerUser = User::firstOrCreate(
             ['email' => 'player@medieval-realm.test'],
-            ['name' => 'Joueur Démo', 'password' => 'password', 'role' => UserRole::Player],
+            [
+                'username' => 'seigneur_demo',
+                'password' => 'password',
+                'role' => UserRole::Player,
+                'email_verified_at' => now(),
+                'terms_accepted_at' => now(),
+                'privacy_policy_version' => '1.0',
+            ],
         );
 
         $game = Game::firstOrCreate(

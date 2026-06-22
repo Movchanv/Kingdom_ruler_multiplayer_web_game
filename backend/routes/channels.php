@@ -10,5 +10,5 @@ Broadcast::channel('App.Models.User.{id}', function (User $user, int $id): bool 
 });
 
 Broadcast::channel('presence-room.{roomId}', function (User $user, string $roomId): array {
-    return ['id' => $user->id, 'name' => $user->name];
+    return ['id' => $user->id, 'name' => $user->username];
 });
