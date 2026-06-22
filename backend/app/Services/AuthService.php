@@ -6,10 +6,13 @@ namespace App\Services;
 
 use App\DTO\Auth\LoginData;
 use App\DTO\Auth\RegisterData;
+use App\DTO\Auth\ResetPasswordData;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -68,6 +71,40 @@ final class AuthService
         $token = $user->currentAccessToken();
         if ($token instanceof PersonalAccessToken) {
             $token->delete();
+        }
+    }
+
+    /**
+     * Send a password-reset link. Always silent on unknown emails to avoid
+     * account enumeration (the controller returns a generic message).
+     */
+    public function sendPasswordResetLink(string $email): void
+    {
+        Password::sendResetLink(['email' => $email]);
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function resetPassword(ResetPasswordData $data): void
+    {
+        $status = Password::reset(
+            [
+                'email' => $data->email,
+                'password' => $data->password,
+                'token' => $data->token,
+            ],
+            function (User $user, string $password): void {
+                $user->forceFill(['password' => $password])->save();
+
+                event(new PasswordReset($user));
+            },
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
         }
     }
 }
