@@ -7,6 +7,7 @@ namespace App\Services;
 use App\DTO\Auth\LoginData;
 use App\DTO\Auth\RegisterData;
 use App\DTO\Auth\ResetPasswordData;
+use App\Enums\UserRole;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Auth\Events\PasswordReset;
@@ -37,6 +38,7 @@ final class AuthService
             'country' => $data->country,
             'date_of_birth' => $data->dateOfBirth,
             'gender' => $data->gender,
+            'role' => UserRole::Player,
             'terms_accepted_at' => now(),
             'privacy_policy_version' => self::PRIVACY_POLICY_VERSION,
         ]);

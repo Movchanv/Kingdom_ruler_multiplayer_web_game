@@ -10,6 +10,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -20,6 +21,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $country
  * @property Carbon|null $date_of_birth
  * @property Gender|null $gender
+ * @property UserRole $role
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $terms_accepted_at
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -29,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory;
 
     use Notifiable;
+    use SoftDeletes;
 
     protected $fillable = [
         'username',

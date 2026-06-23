@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -32,6 +33,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('email/verification-notification', [EmailVerificationController::class, 'resend'])
             ->middleware('throttle:6,1')
             ->name('verification.send');
+
+        // RGPD: data access/portability, consent, right to erasure.
+        Route::get('account/export', [AccountController::class, 'export'])->name('account.export');
+        Route::get('account/consent', [AccountController::class, 'consent'])->name('account.consent');
+        Route::post('account/consent', [AccountController::class, 'acceptConsent'])->name('account.consent.accept');
+        Route::delete('account', [AccountController::class, 'destroy'])->name('account.destroy');
 
         // Game routes require a verified email.
         Route::middleware('verified')->group(function (): void {
