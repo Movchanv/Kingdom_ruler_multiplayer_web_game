@@ -6,12 +6,37 @@ const routes = [
     path: '/',
     name: 'home',
     component: () => import('@/pages/HomePage.vue'),
+    meta: { layout: 'blank' },
   },
   {
     path: '/login',
     name: 'login',
     component: () => import('@/pages/LoginPage.vue'),
     meta: { guest: true, layout: 'auth' },
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/pages/RegisterPage.vue'),
+    meta: { guest: true, layout: 'auth' },
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/pages/ForgotPasswordPage.vue'),
+    meta: { guest: true, layout: 'auth' },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/pages/ResetPasswordPage.vue'),
+    meta: { layout: 'auth' },
+  },
+  {
+    path: '/email-verified',
+    name: 'email-verified',
+    component: () => import('@/pages/EmailVerifiedPage.vue'),
+    meta: { layout: 'auth' },
   },
   {
     path: '/play',

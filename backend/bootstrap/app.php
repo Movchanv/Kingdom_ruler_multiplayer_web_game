@@ -20,6 +20,5 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['auth:sanctum']],
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {})->create();
