@@ -14,6 +14,19 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    async register(payload) {
+      this.loading = true
+      try {
+        const { data } = await authService.register(payload)
+        this.token = data.data.token
+        this.user = data.data.user
+        setToken(this.token)
+        return this.user
+      } finally {
+        this.loading = false
+      }
+    },
+
     async login(credentials) {
       this.loading = true
       try {

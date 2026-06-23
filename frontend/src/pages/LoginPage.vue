@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 
@@ -53,5 +53,17 @@ async function submit() {
     <button type="submit" class="btn-primary w-full" :disabled="submitting">
       {{ submitting ? 'Connexion…' : 'Se connecter' }}
     </button>
+
+    <div class="space-y-1 text-center text-sm text-parchment-100/80">
+      <p>
+        <RouterLink to="/forgot-password" class="text-gold-400 hover:underline">
+          Mot de passe oublié ?
+        </RouterLink>
+      </p>
+      <p>
+        Pas encore de compte ?
+        <RouterLink to="/register" class="text-gold-400 hover:underline">S'inscrire</RouterLink>
+      </p>
+    </div>
   </form>
 </template>

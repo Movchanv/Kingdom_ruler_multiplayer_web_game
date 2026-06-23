@@ -19,7 +19,5 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__.'/../routes/channels.php',
         ['middleware' => ['auth:sanctum']],
     )
-    ->withMiddleware(function (Middleware $middleware) {
-        $middleware->statefulApi();
-    })
+    ->withMiddleware(function (Middleware $middleware) {})
     ->withExceptions(function (Exceptions $exceptions) {})->create();

@@ -3,7 +3,6 @@ import { useToast } from 'vue-toastification'
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
-  withCredentials: true,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
