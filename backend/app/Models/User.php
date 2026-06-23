@@ -4,15 +4,28 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Gender;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+/**
+ * @property string|null $username
+ * @property string|null $country
+ * @property Carbon|null $date_of_birth
+ * @property Gender|null $gender
+ * @property UserRole $role
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $terms_accepted_at
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
 
@@ -20,11 +33,17 @@ class User extends Authenticatable
     use HasFactory;
 
     use Notifiable;
+    use SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'username',
         'email',
         'password',
+        'country',
+        'date_of_birth',
+        'gender',
+        'terms_accepted_at',
+        'privacy_policy_version',
         'role',
         'banned_at',
         'ban_reason',
@@ -41,6 +60,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'gender' => Gender::class,
+            'date_of_birth' => 'date',
+            'terms_accepted_at' => 'datetime',
             'banned_at' => 'datetime',
         ];
     }
