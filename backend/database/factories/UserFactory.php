@@ -32,6 +32,8 @@ class UserFactory extends Factory
             'gender' => fake()->randomElement(Gender::cases()),
             'terms_accepted_at' => now(),
             'privacy_policy_version' => '1.0',
+            'xp' => 0,
+            'title_id' => null,
         ];
     }
 

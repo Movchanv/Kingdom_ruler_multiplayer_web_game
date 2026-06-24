@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\EventDifficulty;
 use App\Enums\EventType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,8 +14,12 @@ class Event extends Model
 {
     protected $fillable = [
         'type',
+        'difficulty',
+        'country_id',
+        'town_id',
         'name',
         'description',
+        'image',
         'effects',
         'weight',
         'starts_at',
@@ -27,12 +32,29 @@ class Event extends Model
     {
         return [
             'type' => EventType::class,
+            'difficulty' => EventDifficulty::class,
             'effects' => 'array',
             'weight' => 'integer',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Country, $this>
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * @return BelongsTo<Town, $this>
+     */
+    public function town(): BelongsTo
+    {
+        return $this->belongsTo(Town::class);
     }
 
     /**

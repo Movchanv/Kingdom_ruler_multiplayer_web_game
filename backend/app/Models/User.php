@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property UserRole $role
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $terms_accepted_at
+ * @property int $xp
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -47,6 +49,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'banned_at',
         'ban_reason',
+        'xp',
+        'title_id',
     ];
 
     protected $hidden = [
@@ -64,6 +68,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'date_of_birth' => 'date',
             'terms_accepted_at' => 'datetime',
             'banned_at' => 'datetime',
+            'xp' => 'integer',
         ];
     }
 
@@ -83,5 +88,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function players(): HasMany
     {
         return $this->hasMany(Player::class);
+    }
+
+    /**
+     * @return BelongsTo<Title, $this>
+     */
+    public function title(): BelongsTo
+    {
+        return $this->belongsTo(Title::class);
     }
 }

@@ -30,10 +30,10 @@ class Title extends Model
     }
 
     /**
-     * @return HasMany<Player, $this>
+     * @return HasMany<User, $this>
      */
-    public function players(): HasMany
+    public function users(): HasMany
     {
-        return $this->hasMany(Player::class);
+        return $this->hasMany(User::class);
     }
 }

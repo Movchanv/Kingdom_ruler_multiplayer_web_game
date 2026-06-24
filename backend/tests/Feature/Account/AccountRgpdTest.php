@@ -18,7 +18,7 @@ final class AccountRgpdTest extends TestCase
     public function test_a_user_can_export_their_personal_data(): void
     {
         $user = User::factory()->create();
-        Player::factory()->create(['user_id' => $user->id, 'display_name' => 'Roi Arthur']);
+        Player::factory()->create(['user_id' => $user->id]);
         Sanctum::actingAs($user);
 
         $this->getJson('/api/v1/account/export')
@@ -26,8 +26,8 @@ final class AccountRgpdTest extends TestCase
             ->assertJsonPath('data.account.email', $user->email)
             ->assertJsonStructure([
                 'data' => [
-                    'account' => ['username', 'email', 'country', 'date_of_birth', 'gender'],
-                    'players' => [['game', 'display_name', 'xp']],
+                    'account' => ['username', 'email', 'country', 'gender', 'xp', 'title'],
+                    'participations' => [['game', 'country']],
                 ],
             ]);
     }
@@ -36,7 +36,7 @@ final class AccountRgpdTest extends TestCase
     {
         $user = User::factory()->create(['country' => 'FR']);
         $originalEmail = $user->email;
-        $player = Player::factory()->create(['user_id' => $user->id, 'display_name' => 'Roi Arthur']);
+        $player = Player::factory()->create(['user_id' => $user->id]);
         Sanctum::actingAs($user);
 
         $this->deleteJson('/api/v1/account')->assertOk();
@@ -45,7 +45,7 @@ final class AccountRgpdTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $user->id, 'email' => $originalEmail]);
         $this->assertDatabaseHas('users', ['id' => $user->id, 'country' => null, 'username' => null]);
 
-        $this->assertDatabaseHas('players', ['id' => $player->id, 'display_name' => 'Ancien joueur']);
+        $this->assertDatabaseHas('players', ['id' => $player->id]);
     }
 
     public function test_a_user_can_view_and_update_their_consent(): void

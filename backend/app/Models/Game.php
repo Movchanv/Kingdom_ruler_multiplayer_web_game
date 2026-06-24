@@ -10,7 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property GameStatus $status
+ * @property array<string, mixed>|null $config
+ * @property array<string, mixed>|null $results
+ * @property Carbon|null $started_at
+ * @property Carbon|null $ended_at
+ */
 class Game extends Model
 {
     /** @use HasFactory<GameFactory> */
@@ -18,8 +26,10 @@ class Game extends Model
 
     protected $fillable = [
         'name',
+        'country_id',
         'status',
         'config',
+        'results',
         'started_at',
         'ended_at',
         'created_by',
@@ -30,9 +40,18 @@ class Game extends Model
         return [
             'status' => GameStatus::class,
             'config' => 'array',
+            'results' => 'array',
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Country, $this>
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     /**

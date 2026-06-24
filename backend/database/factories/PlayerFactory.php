@@ -23,9 +23,7 @@ class PlayerFactory extends Factory
             'user_id' => User::factory(),
             'game_id' => Game::factory(),
             'country_id' => Country::factory(),
-            'title_id' => null,
-            'display_name' => fake()->userName(),
-            'xp' => 0,
+            'current_town_id' => null,
         ];
     }
 }

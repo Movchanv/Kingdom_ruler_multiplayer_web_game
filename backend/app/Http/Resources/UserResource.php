@@ -26,6 +26,8 @@ class UserResource extends JsonResource
             'date_of_birth' => $this->date_of_birth?->toDateString(),
             'gender' => $this->gender?->value,
             'gender_label' => $this->gender?->label(),
+            'xp' => $this->xp,
+            'title' => $this->title?->name,
             'email_verified' => $this->hasVerifiedEmail(),
             'created_at' => $this->created_at,
         ];

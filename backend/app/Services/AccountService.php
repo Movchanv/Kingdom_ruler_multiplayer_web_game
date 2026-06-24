@@ -11,13 +11,13 @@ use Illuminate\Support\Str;
 final class AccountService
 {
     /**
-     * Respect ofRGPD art. 15 & 20
+     * RGPD art. 15 & 20
      *
      * @return array<string, mixed>
      */
     public function export(User $user): array
     {
-        $user->loadMissing('players.game', 'players.title');
+        $user->loadMissing('title', 'players.game', 'players.country');
 
         return [
             'account' => [
@@ -27,28 +27,26 @@ final class AccountService
                 'date_of_birth' => $user->date_of_birth?->toDateString(),
                 'gender' => $user->gender?->value,
                 'role' => $user->role->value,
+                'xp' => $user->xp,
+                'title' => $user->title?->name,
                 'email_verified_at' => $user->email_verified_at?->toIso8601String(),
                 'terms_accepted_at' => $user->terms_accepted_at?->toIso8601String(),
                 'privacy_policy_version' => $user->privacy_policy_version,
                 'created_at' => $user->created_at?->toIso8601String(),
             ],
-            'players' => $user->players->map(fn (Player $player): array => [
+            'participations' => $user->players->map(fn (Player $player): array => [
                 'game' => $player->game?->name,
-                'display_name' => $player->display_name,
-                'xp' => $player->xp,
-                'title' => $player->title?->name,
+                'country' => $player->country?->name,
                 'created_at' => $player->created_at?->toIso8601String(),
             ])->all(),
         ];
     }
 
     /**
-     * Respect of RGPD art. 17
+     * RGPD art. 17
      */
     public function anonymize(User $user): void
     {
-        $user->players()->update(['display_name' => 'Ancien joueur']);
-
         $user->tokens()->delete();
 
         $user->forceFill([
