@@ -16,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 final class GameService
 {
+    public function __construct(private readonly DailyActionTracker $tracker) {}
+
     /**
      * @return array<int, array<string, mixed>>
      */
@@ -116,6 +118,8 @@ final class GameService
 
         $player->load(['game.country', 'user.title']);
 
+        $dailyActions = (int) ($player->game->config['daily_actions'] ?? 5);
+
         return [
             'player' => [
                 'id' => $player->id,
@@ -130,7 +134,8 @@ final class GameService
                     'name' => $player->game->name,
                     'status' => $player->game->status->value,
                 ],
-                'daily_actions' => (int) ($player->game->config['daily_actions'] ?? 5),
+                'daily_actions' => $dailyActions,
+                'actions_remaining' => $this->tracker->remaining($player, $dailyActions),
             ],
             'town' => $this->townState($player->current_town_id),
         ];

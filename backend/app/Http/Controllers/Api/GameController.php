@@ -6,9 +6,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Game\JoinGameRequest;
+use App\Http\Requests\Game\PerformActionRequest;
+use App\Models\Action;
 use App\Models\Country;
 use App\Models\Town;
 use App\Models\User;
+use App\Services\ActionService;
 use App\Services\GameService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +22,10 @@ final class GameController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private readonly GameService $game) {}
+    public function __construct(
+        private readonly GameService $game,
+        private readonly ActionService $actions,
+    ) {}
 
     public function countries(Request $request): JsonResponse
     {
@@ -72,5 +78,25 @@ final class GameController extends Controller
         $user = $request->user();
 
         return $this->success($this->game->state($user));
+    }
+
+    public function performAction(PerformActionRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $player = $this->game->activePlayer($user);
+
+        if ($player === null) {
+            throw ValidationException::withMessages([
+                'player' => [__('You have not joined a country yet.')],
+            ]);
+        }
+
+        $action = Action::query()->where('key', $request->string('action'))->firstOrFail();
+
+        $result = $this->actions->perform($player, $action);
+
+        return $this->success($result, __('Action performed.'));
     }
 }

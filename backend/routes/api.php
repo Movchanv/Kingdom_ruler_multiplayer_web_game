@@ -45,7 +45,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('game/join', [GameController::class, 'join'])->name('game.join');
             Route::post('game/towns/{town}/enter', [GameController::class, 'enterTown'])->name('game.towns.enter');
             Route::get('game/state', [GameController::class, 'state'])->name('game.state');
-
+            Route::post('game/actions', [GameController::class, 'performAction'])->name('game.actions.perform');
             Route::post('realtime/announce', [RealtimeDemoController::class, 'broadcast'])->name('realtime.announce');
         });
     });

@@ -92,21 +92,21 @@ class DemoGameSeeder extends Seeder
     private function seedActions(): void
     {
         $actions = [
-            ['mine_gold', 'Miner de l\'or', 1, 5],
-            ['harvest_food', 'Récolter du blé', 1, 3],
-            ['recruit_soldiers', 'Recruter des soldats', 1, 4],
-            ['harvest_wood', 'Récolter du bois', 1, 3],
-            ['harvest_stone', 'Extraire de la pierre', 1, 3],
-            ['harvest_iron', 'Extraire du fer', 1, 3],
-            ['harvest_coal', 'Extraire du charbon', 1, 3],
-            ['build', 'Avancer une construction', 1, 6],
-            ['adventure', 'Partir à l\'aventure', 1, 8],
+            ['mine_gold', 'Miner de l\'or', 1, 5, ['gold' => 10]],
+            ['harvest_food', 'Récolter du blé', 1, 3, ['food' => 8]],
+            ['recruit_soldiers', 'Recruter des soldats', 1, 4, ['soldiers' => 3]],
+            ['harvest_wood', 'Récolter du bois', 1, 3, ['wood' => 8]],
+            ['harvest_stone', 'Extraire de la pierre', 1, 3, ['stone' => 6]],
+            ['harvest_iron', 'Extraire du fer', 1, 3, ['iron' => 5]],
+            ['harvest_coal', 'Extraire du charbon', 1, 3, ['coal' => 5]],
+            ['build', 'Avancer une construction', 1, 6, null],
+            ['adventure', 'Partir à l\'aventure', 1, 8, null],
         ];
 
-        foreach ($actions as [$key, $name, $apCost, $baseXp]) {
+        foreach ($actions as [$key, $name, $apCost, $baseXp, $effects]) {
             Action::firstOrCreate(
                 ['key' => $key],
-                ['name' => $name, 'ap_cost' => $apCost, 'base_xp' => $baseXp, 'is_active' => true],
+                ['name' => $name, 'ap_cost' => $apCost, 'base_xp' => $baseXp, 'effects' => $effects, 'is_active' => true],
             );
         }
     }
