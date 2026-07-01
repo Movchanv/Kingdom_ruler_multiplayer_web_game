@@ -16,7 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 final class GameService
 {
-    public function __construct(private readonly DailyActionTracker $tracker) {}
+    public function __construct(
+        private readonly DailyActionTracker $tracker,
+        private readonly TownBonusService $bonuses,
+    ) {}
 
     /**
      * @return array<int, array<string, mixed>>
@@ -177,8 +180,10 @@ final class GameService
                     'amount' => $townResource->amount,
                     'capacity' => $townResource->capacity,
                 ])->all(),
+            'bonuses' => $this->bonuses->forTown($town),
             'buildings' => $town->townBuildings
                 ->map(fn (TownBuilding $townBuilding): array => [
+                    'id' => $townBuilding->id,
                     'key' => $townBuilding->building->key,
                     'name' => $townBuilding->building->name,
                     'category' => $townBuilding->building->category,

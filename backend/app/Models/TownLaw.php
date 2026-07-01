@@ -6,7 +6,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $applied_at
+ * @property Carbon|null $expires_at
+ */
 class TownLaw extends Model
 {
     protected $fillable = [

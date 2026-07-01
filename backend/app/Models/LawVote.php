@@ -8,7 +8,13 @@ use App\Enums\LawVoteStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property LawVoteStatus $status
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $ends_at
+ */
 class LawVote extends Model
 {
     protected $fillable = [

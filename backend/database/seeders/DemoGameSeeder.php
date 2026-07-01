@@ -161,18 +161,22 @@ class DemoGameSeeder extends Seeder
     private function seedEvents(): void
     {
         $events = [
-            ['Trésor caché', 'Vous découvrez un coffre oublié.', ['gold' => 50], EventDifficulty::Easy, 40],
-            ['Bonne récolte', 'Un fermier reconnaissant offre des vivres.', ['food' => 30], EventDifficulty::Easy, 30],
-            ['Embuscade', 'Des bandits attaquent le convoi.', ['soldiers' => -2, 'loyalty' => -2], EventDifficulty::Medium, 20],
-            ['Peste', 'Une épidémie frappe la ville.', ['loyalty' => -5, 'food' => -20], EventDifficulty::Hard, 10],
-            ['Journée bénie', 'Le seigneur accorde une action supplémentaire.', ['free_action' => 1], EventDifficulty::Easy, 5],
+            [EventType::Adventure, 'Trésor caché', 'Vous découvrez un coffre oublié.', ['gold' => 50], EventDifficulty::Easy, 40],
+            [EventType::Adventure, 'Bonne récolte', 'Un fermier reconnaissant offre des vivres.', ['food' => 30], EventDifficulty::Easy, 30],
+            [EventType::Adventure, 'Embuscade', 'Des bandits attaquent le convoi.', ['soldiers' => -2, 'loyalty' => -2], EventDifficulty::Medium, 20],
+            [EventType::Adventure, 'Peste', 'Une épidémie frappe la ville.', ['loyalty' => -5, 'food' => -20], EventDifficulty::Hard, 10],
+            [EventType::Adventure, 'Journée bénie', 'Le seigneur accorde une action supplémentaire.', ['free_action' => 1], EventDifficulty::Easy, 5],
+
+            [EventType::World, 'Raid de pillards', 'Des pillards ravagent les abords de la ville.', ['gold' => -30, 'loyalty' => -3], EventDifficulty::Easy, 30],
+            [EventType::World, 'Disette', 'Les réserves de nourriture s\'épuisent.', ['food' => -25, 'loyalty' => -5], EventDifficulty::Medium, 20],
+            [EventType::World, 'Révolte populaire', 'Le peuple se soulève contre l\'autorité.', ['loyalty' => -10, 'soldiers' => -3], EventDifficulty::Hard, 10],
         ];
 
-        foreach ($events as [$name, $description, $effects, $difficulty, $weight]) {
+        foreach ($events as [$type, $name, $description, $effects, $difficulty, $weight]) {
             Event::firstOrCreate(
                 ['name' => $name],
                 [
-                    'type' => EventType::Adventure,
+                    'type' => $type,
                     'difficulty' => $difficulty,
                     'description' => $description,
                     'effects' => $effects,
@@ -250,10 +254,12 @@ class DemoGameSeeder extends Seeder
                 'status' => GameStatus::Active,
                 'config' => [
                     'daily_actions' => 5,
+                    'build_step' => 20,
                     'upkeep_hour' => '12:00',
                     'vote_hours' => 12,
                     'soldier_upkeep' => ['gold' => 1, 'food' => 1],
                     'desertion_rate' => 0.2,
+                    'upkeep_loyalty_penalty' => 5,
                 ],
                 'started_at' => now(),
                 'created_by' => $admin->id,

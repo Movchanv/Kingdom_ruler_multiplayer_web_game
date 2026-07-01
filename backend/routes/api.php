@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminEventController;
+use App\Http\Controllers\Api\AdminVoteController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\RealtimeDemoController;
+use App\Http\Controllers\Api\VoteController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -45,8 +48,19 @@ Route::prefix('v1')->group(function (): void {
             Route::post('game/join', [GameController::class, 'join'])->name('game.join');
             Route::post('game/towns/{town}/enter', [GameController::class, 'enterTown'])->name('game.towns.enter');
             Route::get('game/state', [GameController::class, 'state'])->name('game.state');
+            Route::get('game/seasons/{game}/results', [GameController::class, 'seasonResults'])->name('game.seasons.results');
             Route::post('game/actions', [GameController::class, 'performAction'])->name('game.actions.perform');
+            Route::post('game/buildings/{townBuilding}/build', [GameController::class, 'build'])->name('game.buildings.build');
+            Route::post('game/adventure', [GameController::class, 'adventure'])->name('game.adventure');
             Route::post('realtime/announce', [RealtimeDemoController::class, 'broadcast'])->name('realtime.announce');
+
+            Route::get('game/votes/current', [VoteController::class, 'current'])->name('game.votes.current');
+            Route::post('game/votes/{vote}/ballot', [VoteController::class, 'ballot'])->name('game.votes.ballot');
+
+            Route::middleware('admin')->group(function (): void {
+                Route::post('admin/events/{event}/trigger', [AdminEventController::class, 'trigger'])->name('admin.events.trigger');
+                Route::post('admin/votes', [AdminVoteController::class, 'open'])->name('admin.votes.open');
+            });
         });
     });
 });

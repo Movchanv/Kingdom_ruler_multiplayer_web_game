@@ -19,7 +19,7 @@ final class DailyActionTracker
     {
         return max(0, $limit - $this->used($player));
     }
-    
+
     public function consume(Player $player, int $cost, int $limit): bool
     {
         $key = $this->key($player);

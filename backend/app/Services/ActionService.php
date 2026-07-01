@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\GameStatus;
 use App\Models\Action;
 use App\Models\ActionLog;
 use App\Models\Player;
-use App\Models\Title;
-use App\Models\Town;
 use App\Models\TownResource;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -19,7 +16,12 @@ use Throwable;
 
 final class ActionService
 {
-    public function __construct(private readonly DailyActionTracker $tracker) {}
+    public function __construct(
+        private readonly DailyActionTracker $tracker,
+        private readonly ProgressionService $progression,
+        private readonly PlayerLocationGuard $guard,
+        private readonly TownBonusService $bonuses,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -32,7 +34,7 @@ final class ActionService
             ]);
         }
 
-        $town = $this->resolveTown($player);
+        $town = $this->guard->requireActiveTown($player);
         $limit = $this->dailyLimit($player);
 
         $townResources = $town->townResources()->with('resource')->get()
@@ -46,6 +48,8 @@ final class ActionService
             }
         }
 
+        $townBonuses = $this->bonuses->forTown($town);
+
         if (! $this->tracker->consume($player, $action->ap_cost, $limit)) {
             throw ValidationException::withMessages([
                 'action' => [__('You have no action points left today.')],
@@ -53,12 +57,12 @@ final class ActionService
         }
 
         try {
-            return DB::transaction(function () use ($player, $action, $town, $townResources, $limit): array {
-                $produced = $this->applyEffects($action, $townResources);
+            return DB::transaction(function () use ($player, $action, $town, $townResources, $townBonuses, $limit): array {
+                $produced = $this->applyEffects($action, $townResources, $townBonuses);
 
                 /** @var User $user */
                 $user = $player->user()->first();
-                $xpGained = $this->awardXp($user, $action->base_xp);
+                $xpGained = $this->progression->award($user, $action->base_xp);
 
                 ActionLog::create([
                     'game_id' => $player->game_id,
@@ -86,36 +90,13 @@ final class ActionService
         }
     }
 
-    private function resolveTown(Player $player): Town
-    {
-        $town = $player->currentTown()->first();
-
-        if ($town === null) {
-            throw ValidationException::withMessages([
-                'town' => [__('You are not located in any town.')],
-            ]);
-        }
-
-        if ($town->destroyed_at !== null) {
-            throw ValidationException::withMessages([
-                'town' => [__('This town has been destroyed.')],
-            ]);
-        }
-
-        if ($player->game()->first()?->status !== GameStatus::Active) {
-            throw ValidationException::withMessages([
-                'town' => [__('This season has ended.')],
-            ]);
-        }
-
-        return $town;
-    }
-
     /**
+     *
      * @param  Collection<string, TownResource>  $townResources
+     * @param  array<string, int>  $townBonuses
      * @return array<int, array<string, mixed>>
      */
-    private function applyEffects(Action $action, $townResources): array
+    private function applyEffects(Action $action, Collection $townResources, array $townBonuses): array
     {
         $produced = [];
 
@@ -125,6 +106,11 @@ final class ActionService
         foreach ($effects as $resourceKey => $delta) {
             /** @var TownResource $townResource */
             $townResource = $townResources->get($resourceKey);
+
+            if ($delta > 0) {
+                $pct = $this->bonuses->productionBonusPct($townBonuses, $resourceKey);
+                $delta = (int) floor($delta * (1 + $pct / 100));
+            }
 
             $newAmount = $townResource->amount + $delta;
 
@@ -147,25 +133,6 @@ final class ActionService
         }
 
         return $produced;
-    }
-
-    private function awardXp(User $user, int $baseXp): int
-    {
-        $user->xp += $baseXp;
-
-        $title = Title::query()
-            ->where('min_xp', '<=', $user->xp)
-            ->orderByDesc('min_xp')
-            ->first();
-
-        if ($title !== null && $user->title_id !== $title->id) {
-            $user->title_id = $title->id;
-        }
-
-        $user->save();
-        $user->load('title');
-
-        return $baseXp;
     }
 
     private function dailyLimit(Player $player): int

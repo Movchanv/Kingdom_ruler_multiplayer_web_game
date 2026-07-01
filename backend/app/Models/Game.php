@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $results
  * @property Carbon|null $started_at
  * @property Carbon|null $ended_at
+ * @property Carbon|null $last_world_event_at
  */
 class Game extends Model
 {
@@ -32,6 +33,7 @@ class Game extends Model
         'results',
         'started_at',
         'ended_at',
+        'last_world_event_at',
         'created_by',
     ];
 
@@ -43,6 +45,7 @@ class Game extends Model
             'results' => 'array',
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
+            'last_world_event_at' => 'datetime',
         ];
     }
 

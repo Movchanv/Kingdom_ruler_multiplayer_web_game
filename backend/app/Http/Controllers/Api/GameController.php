@@ -9,9 +9,14 @@ use App\Http\Requests\Game\JoinGameRequest;
 use App\Http\Requests\Game\PerformActionRequest;
 use App\Models\Action;
 use App\Models\Country;
+use App\Models\Game;
+use App\Models\Player;
 use App\Models\Town;
+use App\Models\TownBuilding;
 use App\Models\User;
 use App\Services\ActionService;
+use App\Services\AdventureService;
+use App\Services\BuildService;
 use App\Services\GameService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +30,8 @@ final class GameController extends Controller
     public function __construct(
         private readonly GameService $game,
         private readonly ActionService $actions,
+        private readonly BuildService $builder,
+        private readonly AdventureService $adventure,
     ) {}
 
     public function countries(Request $request): JsonResponse
@@ -53,16 +60,7 @@ final class GameController extends Controller
 
     public function enterTown(Request $request, Town $town): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        $player = $this->game->activePlayer($user);
-
-        if ($player === null) {
-            throw ValidationException::withMessages([
-                'player' => [__('You have not joined a country yet.')],
-            ]);
-        }
+        $player = $this->requirePlayer($request);
 
         $this->game->enterTown($player, $town);
 
@@ -82,6 +80,46 @@ final class GameController extends Controller
 
     public function performAction(PerformActionRequest $request): JsonResponse
     {
+        $player = $this->requirePlayer($request);
+
+        $action = Action::query()->where('key', $request->string('action'))->firstOrFail();
+
+        $result = $this->actions->perform($player, $action);
+
+        return $this->success($result, __('Action performed.'));
+    }
+
+    public function build(Request $request, TownBuilding $townBuilding): JsonResponse
+    {
+        $player = $this->requirePlayer($request);
+
+        $result = $this->builder->contribute($player, $townBuilding);
+
+        return $this->success($result, __('Construction advanced.'));
+    }
+
+    public function adventure(Request $request): JsonResponse
+    {
+        $player = $this->requirePlayer($request);
+
+        $result = $this->adventure->embark($player);
+
+        return $this->success($result, __('Adventure complete.'));
+    }
+
+    public function seasonResults(Game $game): JsonResponse
+    {
+        return $this->success([
+            'id' => $game->id,
+            'name' => $game->name,
+            'status' => $game->status->value,
+            'ended_at' => $game->ended_at?->toIso8601String(),
+            'results' => $game->results,
+        ]);
+    }
+
+    private function requirePlayer(Request $request): Player
+    {
         /** @var User $user */
         $user = $request->user();
 
@@ -93,10 +131,6 @@ final class GameController extends Controller
             ]);
         }
 
-        $action = Action::query()->where('key', $request->string('action'))->firstOrFail();
-
-        $result = $this->actions->perform($player, $action);
-
-        return $this->success($result, __('Action performed.'));
+        return $player;
     }
 }

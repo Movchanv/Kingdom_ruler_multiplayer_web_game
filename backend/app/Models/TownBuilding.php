@@ -7,6 +7,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $level
+ * @property array<string, int>|null $contributions
+ */
 class TownBuilding extends Model
 {
     protected $fillable = [
