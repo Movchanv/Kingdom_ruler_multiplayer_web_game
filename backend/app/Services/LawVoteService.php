@@ -20,11 +20,25 @@ use Illuminate\Validation\ValidationException;
 
 final class LawVoteService
 {
+    public function __construct(private readonly ChatService $chat) {}
+
     /**
      * @param  array<int, int>  $lawIds
      */
     public function open(Game $game, Country $country, array $lawIds, int $hours, ?int $creatorId = null): LawVote
     {
+        $alreadyOpen = LawVote::query()
+            ->where('game_id', $game->id)
+            ->where('country_id', $country->id)
+            ->where('status', LawVoteStatus::Open)
+            ->exists();
+
+        if ($alreadyOpen) {
+            throw ValidationException::withMessages([
+                'vote' => [__('A vote is already open for this country.')],
+            ]);
+        }
+
         return DB::transaction(function () use ($game, $country, $lawIds, $hours, $creatorId): LawVote {
             $vote = LawVote::create([
                 'game_id' => $game->id,
@@ -115,6 +129,12 @@ final class LawVoteService
 
             if ($law !== null) {
                 $this->applyLawToCountry($vote, $law);
+
+                $this->chat->system(
+                    $vote->game_id,
+                    $vote->country_id,
+                    sprintf('La loi « %s » a été adoptée par le peuple !', $law->name),
+                );
             }
 
             return $law;

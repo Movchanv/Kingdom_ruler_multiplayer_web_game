@@ -77,6 +77,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === UserRole::Admin;
     }
 
+    public function isResearcher(): bool
+    {
+        return $this->role === UserRole::Researcher;
+    }
+
     public function isBanned(): bool
     {
         return $this->banned_at !== null;

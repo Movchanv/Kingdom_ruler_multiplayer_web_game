@@ -38,6 +38,10 @@ api.interceptors.response.use(
     const status = error.response?.status
     const message = error.response?.data?.message ?? 'Une erreur est survenue.'
 
+    if (error.config?.skipToast && status !== 401) {
+      return Promise.reject(error)
+    }
+
     if (status === 401) {
       setToken(null)
       if (window.location.pathname !== '/login') {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\GameStatus;
+use App\Events\TownUpdated;
 use App\Models\Game;
 use App\Models\Town;
 use App\Models\TownResource;
@@ -56,6 +57,8 @@ final class MaintenanceService
         }
 
         $town->save();
+
+        event(new TownUpdated($town->id));
     }
 
     /**
@@ -153,7 +156,18 @@ final class MaintenanceService
         return $townResources->has($key) ? $townResources->get($key)->amount : 0;
     }
 
-    private function endSeason(Game $game): void
+    public function forceEnd(Game $game): void
+    {
+        if ($game->status !== GameStatus::Active) {
+            return;
+        }
+
+        $game->towns()->whereNull('destroyed_at')->update(['destroyed_at' => Carbon::now()]);
+
+        $this->endSeason($game, 'admin_ended');
+    }
+
+    private function endSeason(Game $game, string $reason = 'all_towns_destroyed'): void
     {
         $rows = DB::table('action_logs')
             ->join('players', 'players.id', '=', 'action_logs.player_id')
@@ -181,7 +195,7 @@ final class MaintenanceService
             'status' => GameStatus::Ended,
             'ended_at' => Carbon::now(),
             'results' => [
-                'reason' => 'all_towns_destroyed',
+                'reason' => $reason,
                 'ended_at' => Carbon::now()->toIso8601String(),
                 'ranking' => $ranking,
             ],

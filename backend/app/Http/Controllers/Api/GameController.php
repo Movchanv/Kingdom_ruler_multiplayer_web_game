@@ -78,6 +78,13 @@ final class GameController extends Controller
         return $this->success($this->game->state($user));
     }
 
+    public function towns(Request $request): JsonResponse
+    {
+        $player = $this->requirePlayer($request);
+
+        return $this->success($this->game->towns($player));
+    }
+
     public function performAction(PerformActionRequest $request): JsonResponse
     {
         $player = $this->requirePlayer($request);
@@ -109,13 +116,35 @@ final class GameController extends Controller
 
     public function seasonResults(Game $game): JsonResponse
     {
+        $results = $game->results;
+
+        if (is_array($results) && is_array($results['ranking'] ?? null)) {
+            $userIds = array_column($results['ranking'], 'user_id');
+            $usernames = User::query()->whereIn('id', $userIds)->pluck('username', 'id');
+
+            $results['ranking'] = array_map(function (array $entry) use ($usernames): array {
+                $entry['username'] = $usernames[$entry['user_id'] ?? 0] ?? null;
+
+                return $entry;
+            }, $results['ranking']);
+        }
+
         return $this->success([
             'id' => $game->id,
             'name' => $game->name,
+            'country' => $game->country()->value('name'),
             'status' => $game->status->value,
             'ended_at' => $game->ended_at?->toIso8601String(),
-            'results' => $game->results,
+            'results' => $results,
         ]);
+    }
+
+    public function lastSeason(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return $this->success($this->game->lastEndedSeason($user));
     }
 
     private function requirePlayer(Request $request): Player

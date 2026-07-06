@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Events\TownUpdated;
 use App\Models\Action;
 use App\Models\ActionLog;
 use App\Models\Player;
@@ -74,6 +75,8 @@ final class ActionService
                     'xp_gained' => $xpGained,
                 ]);
 
+                event(new TownUpdated($town->id));
+
                 return [
                     'action' => $action->key,
                     'xp_gained' => $xpGained,
@@ -91,7 +94,6 @@ final class ActionService
     }
 
     /**
-     *
      * @param  Collection<string, TownResource>  $townResources
      * @param  array<string, int>  $townBonuses
      * @return array<int, array<string, mixed>>

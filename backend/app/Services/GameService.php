@@ -131,6 +131,7 @@ final class GameService
                 'country' => [
                     'id' => $player->country_id,
                     'name' => $player->game->country?->name,
+                    'slug' => $player->game->country?->slug,
                 ],
                 'season' => [
                     'id' => $player->game->id,
@@ -142,6 +143,28 @@ final class GameService
             ],
             'town' => $this->townState($player->current_town_id),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function towns(Player $player): array
+    {
+        return Town::query()
+            ->where('game_id', $player->game_id)
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Town $town): array => [
+                'id' => $town->id,
+                'name' => $town->name,
+                'map_x' => $town->map_x,
+                'map_y' => $town->map_y,
+                'population' => $town->population,
+                'loyalty' => $town->loyalty,
+                'destroyed_at' => $town->destroyed_at?->toIso8601String(),
+                'is_current' => $town->id === $player->current_town_id,
+            ])
+            ->all();
     }
 
     /**
@@ -157,6 +180,7 @@ final class GameService
             ->with([
                 'townResources.resource',
                 'townBuildings.building.levels',
+                'townLaws.law',
             ])
             ->find($townId);
 
@@ -181,6 +205,14 @@ final class GameService
                     'capacity' => $townResource->capacity,
                 ])->all(),
             'bonuses' => $this->bonuses->forTown($town),
+            'laws' => $town->townLaws
+                ->filter(fn ($townLaw): bool => $townLaw->expires_at === null || $townLaw->expires_at->isFuture())
+                ->map(fn ($townLaw): array => [
+                    'name' => $townLaw->law->name,
+                    'description' => $townLaw->law->description,
+                    'bonus' => $townLaw->law->bonus ?? [],
+                    'applied_at' => $townLaw->applied_at?->toIso8601String(),
+                ])->values()->all(),
             'buildings' => $town->townBuildings
                 ->map(fn (TownBuilding $townBuilding): array => [
                     'id' => $townBuilding->id,
@@ -214,6 +246,32 @@ final class GameService
         $cost = $nextLevel?->cost;
 
         return $cost;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function lastEndedSeason(User $user): ?array
+    {
+        $player = $user->players()
+            ->whereHas('game', fn ($query) => $query->where('status', GameStatus::Ended))
+            ->with('game.country')
+            ->get()
+            ->sortByDesc(fn (Player $player) => $player->game?->ended_at?->getTimestamp() ?? 0)
+            ->first();
+
+        $game = $player?->game;
+
+        if ($game === null) {
+            return null;
+        }
+
+        return [
+            'id' => $game->id,
+            'name' => $game->name,
+            'country' => $game->country?->name,
+            'ended_at' => $game->ended_at?->toIso8601String(),
+        ];
     }
 
     public function activePlayer(User $user): ?Player

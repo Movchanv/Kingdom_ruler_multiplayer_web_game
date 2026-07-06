@@ -169,4 +169,26 @@ final class GameNavigationTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrorFor('player');
     }
+
+    public function test_towns_lists_the_seasons_towns_with_the_current_flag(): void
+    {
+        ['country' => $country, 'game' => $game, 'paris' => $paris, 'lyon' => $lyon] = $this->seedSeason();
+        $user = User::factory()->create();
+        Player::factory()->create([
+            'user_id' => $user->id,
+            'game_id' => $game->id,
+            'country_id' => $country->id,
+            'current_town_id' => $paris->id,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/game/towns')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $paris->id)
+            ->assertJsonPath('data.0.is_current', true)
+            ->assertJsonPath('data.1.id', $lyon->id)
+            ->assertJsonPath('data.1.is_current', false)
+            ->assertJsonStructure(['data' => [['id', 'name', 'map_x', 'map_y', 'loyalty', 'destroyed_at']]]);
+    }
 }

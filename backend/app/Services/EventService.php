@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\EventDifficulty;
 use App\Enums\EventType;
+use App\Events\TownUpdated;
 use App\Models\Event;
 use App\Models\Town;
 use App\Models\TownResource;
@@ -52,6 +53,10 @@ final class EventService
 
         if ($town->isDirty('loyalty')) {
             $town->save();
+        }
+
+        if ($applied !== []) {
+            event(new TownUpdated($town->id));
         }
 
         return $applied;

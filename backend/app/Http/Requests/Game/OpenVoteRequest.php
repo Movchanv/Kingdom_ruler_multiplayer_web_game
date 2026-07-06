@@ -21,7 +21,7 @@ class OpenVoteRequest extends FormRequest
         return [
             'game_id' => ['required', 'integer', 'exists:games,id'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
-            'law_ids' => ['required', 'array', 'min:2'],
+            'law_ids' => ['required', 'array', 'size:3'],
             'law_ids.*' => ['integer', 'distinct', 'exists:laws,id'],
             'hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
         ];

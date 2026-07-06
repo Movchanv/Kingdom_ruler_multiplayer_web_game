@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnsureUserCanResearch;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'researcher' => EnsureUserCanResearch::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {})->create();

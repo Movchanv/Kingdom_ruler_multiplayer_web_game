@@ -9,3 +9,5 @@ Schedule::command('events:tick')->hourly();
 Schedule::command('votes:close')->everyFiveMinutes();
 
 Schedule::command('game:upkeep')->twiceDaily(0, 12);
+
+Schedule::command('model:prune')->daily();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Events\TownUpdated;
 use App\Models\Action;
 use App\Models\ActionLog;
 use App\Models\Player;
@@ -121,6 +122,8 @@ final class BuildService
                     'result' => ['level' => $townBuilding->level, 'leveled_up' => $leveledUp],
                     'xp_gained' => $xpGained,
                 ]);
+
+                event(new TownUpdated($town->id));
 
                 return [
                     'building' => $building->key,

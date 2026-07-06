@@ -23,7 +23,7 @@ final class LawVoteTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * @return array{country: Country, game: Game, town: Town, lawA: Law, lawB: Law}
+     * @return array{country: Country, game: Game, town: Town, lawA: Law, lawB: Law, lawC: Law}
      */
     private function seedCountry(): array
     {
@@ -37,8 +37,9 @@ final class LawVoteTest extends TestCase
         $suffix = uniqid();
         $lawA = Law::create(['key' => 'tax_relief_'.$suffix, 'name' => 'Allègement fiscal', 'bonus' => ['gold_bonus_pct' => 20], 'is_active' => true]);
         $lawB = Law::create(['key' => 'trade_pact_'.$suffix, 'name' => 'Pacte commercial', 'bonus' => ['food_per_day' => 5], 'is_active' => true]);
+        $lawC = Law::create(['key' => 'conscription_'.$suffix, 'name' => 'Conscription', 'bonus' => ['soldiers_bonus_pct' => 10], 'is_active' => true]);
 
-        return ['country' => $country, 'game' => $game, 'town' => $town, 'lawA' => $lawA, 'lawB' => $lawB];
+        return ['country' => $country, 'game' => $game, 'town' => $town, 'lawA' => $lawA, 'lawB' => $lawB, 'lawC' => $lawC];
     }
 
     private function playerIn(Game $game, Country $country, Town $town): array
@@ -59,7 +60,23 @@ final class LawVoteTest extends TestCase
         return app(LawVoteService::class);
     }
 
-    public function test_an_admin_can_open_a_vote(): void
+    public function test_an_admin_can_open_a_vote_with_exactly_three_laws(): void
+    {
+        ['country' => $country, 'game' => $game, 'lawA' => $lawA, 'lawB' => $lawB, 'lawC' => $lawC] = $this->seedCountry();
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/votes', [
+            'game_id' => $game->id,
+            'country_id' => $country->id,
+            'law_ids' => [$lawA->id, $lawB->id, $lawC->id],
+            'hours' => 12,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('law_votes', ['game_id' => $game->id, 'status' => 'open']);
+        $this->assertDatabaseCount('law_vote_options', 3);
+    }
+
+    public function test_a_vote_requires_exactly_three_laws(): void
     {
         ['country' => $country, 'game' => $game, 'lawA' => $lawA, 'lawB' => $lawB] = $this->seedCountry();
         Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
@@ -68,22 +85,48 @@ final class LawVoteTest extends TestCase
             'game_id' => $game->id,
             'country_id' => $country->id,
             'law_ids' => [$lawA->id, $lawB->id],
-            'hours' => 12,
-        ])->assertCreated();
+        ])->assertStatus(422)->assertJsonValidationErrorFor('law_ids');
+    }
 
-        $this->assertDatabaseHas('law_votes', ['game_id' => $game->id, 'status' => 'open']);
-        $this->assertDatabaseCount('law_vote_options', 2);
+    public function test_only_one_vote_may_be_open_at_a_time(): void
+    {
+        ['country' => $country, 'game' => $game, 'lawA' => $lawA, 'lawB' => $lawB, 'lawC' => $lawC] = $this->seedCountry();
+        $this->service()->open($game, $country, [$lawA->id, $lawB->id, $lawC->id], 12);
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/votes', [
+            'game_id' => $game->id,
+            'country_id' => $country->id,
+            'law_ids' => [$lawA->id, $lawB->id, $lawC->id],
+        ])->assertStatus(422)->assertJsonValidationErrorFor('vote');
+    }
+
+    public function test_an_admin_can_create_a_law(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/laws', [
+            'name' => 'Dîme royale',
+            'description' => 'Une taxe au profit de la couronne.',
+            'bonus_key' => 'gold_per_day',
+            'bonus_value' => 5,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Dîme royale')
+            ->assertJsonPath('data.bonus.gold_per_day', 5);
+
+        $this->assertDatabaseHas('laws', ['name' => 'Dîme royale', 'is_active' => true]);
     }
 
     public function test_a_non_admin_cannot_open_a_vote(): void
     {
-        ['country' => $country, 'game' => $game, 'lawA' => $lawA, 'lawB' => $lawB] = $this->seedCountry();
+        ['country' => $country, 'game' => $game, 'lawA' => $lawA, 'lawB' => $lawB, 'lawC' => $lawC] = $this->seedCountry();
         Sanctum::actingAs(User::factory()->create(['role' => UserRole::Player]));
 
         $this->postJson('/api/v1/admin/votes', [
             'game_id' => $game->id,
             'country_id' => $country->id,
-            'law_ids' => [$lawA->id, $lawB->id],
+            'law_ids' => [$lawA->id, $lawB->id, $lawC->id],
         ])->assertForbidden();
     }
 
@@ -139,6 +182,12 @@ final class LawVoteTest extends TestCase
 
         $bonuses = app(TownBonusService::class)->forTown($town->refresh());
         $this->assertSame(20, $bonuses['gold_bonus_pct'] ?? 0);
+
+        $this->assertDatabaseHas('chat_messages', [
+            'game_id' => $game->id,
+            'country_id' => $country->id,
+            'type' => 'system',
+        ]);
     }
 
     public function test_the_close_command_closes_due_votes(): void

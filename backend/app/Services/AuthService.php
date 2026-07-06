@@ -63,6 +63,12 @@ final class AuthService
             ]);
         }
 
+        if ($user->isBanned()) {
+            throw ValidationException::withMessages([
+                'email' => [__('This account has been suspended.')],
+            ]);
+        }
+
         $token = $user->createToken($data->deviceName)->plainTextToken;
 
         return ['user' => $user, 'token' => $token];

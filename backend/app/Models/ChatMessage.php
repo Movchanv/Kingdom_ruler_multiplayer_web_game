@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property ChatMessageType $type
+ */
 class ChatMessage extends Model
 {
     use Prunable;
@@ -30,8 +33,6 @@ class ChatMessage extends Model
     }
 
     /**
-     * Messages older than 7 days are removed by `php artisan model:prune`.
-     *
      * @return Builder<static>
      */
     public function prunable(): Builder
