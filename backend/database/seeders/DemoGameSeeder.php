@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\EventDifficulty;
 use App\Enums\EventType;
 use App\Enums\GameStatus;
 use App\Enums\QuestStatus;
@@ -72,10 +73,12 @@ class DemoGameSeeder extends Seeder
     {
         $resources = [
             ['gold', 'Or', false],
-            ['wood', 'Bois', false],
-            ['stone', 'Pierre', false],
             ['food', 'Nourriture', false],
             ['soldiers', 'Soldats', true],
+            ['wood', 'Bois', false],
+            ['stone', 'Pierre', false],
+            ['iron', 'Fer', false],
+            ['coal', 'Charbon', false],
         ];
 
         foreach ($resources as [$key, $name, $isMilitary]) {
@@ -89,32 +92,37 @@ class DemoGameSeeder extends Seeder
     private function seedActions(): void
     {
         $actions = [
-            ['mine_gold', 'Miner de l\'or', 1, 5],
-            ['harvest_wood', 'Récolter du bois', 1, 3],
-            ['harvest_stone', 'Récolter de la pierre', 1, 3],
-            ['harvest_food', 'Récolter de la nourriture', 1, 3],
-            ['recruit_soldiers', 'Recruter des soldats', 1, 4],
-            ['build', 'Avancer une construction', 1, 6],
-            ['adventure', 'Partir à l\'aventure', 1, 8],
+            ['mine_gold', 'Miner de l\'or', 1, 5, ['gold' => 10]],
+            ['harvest_food', 'Récolter du blé', 1, 3, ['food' => 8]],
+            ['recruit_soldiers', 'Recruter des soldats', 1, 4, ['soldiers' => 3]],
+            ['harvest_wood', 'Récolter du bois', 1, 3, ['wood' => 8]],
+            ['harvest_stone', 'Extraire de la pierre', 1, 3, ['stone' => 6]],
+            ['harvest_iron', 'Extraire du fer', 1, 3, ['iron' => 5]],
+            ['harvest_coal', 'Extraire du charbon', 1, 3, ['coal' => 5]],
+            ['build', 'Avancer une construction', 1, 6, null],
+            ['adventure', 'Partir à l\'aventure', 1, 8, null],
         ];
 
-        foreach ($actions as [$key, $name, $apCost, $baseXp]) {
+        foreach ($actions as [$key, $name, $apCost, $baseXp, $effects]) {
             Action::firstOrCreate(
                 ['key' => $key],
-                ['name' => $name, 'ap_cost' => $apCost, 'base_xp' => $baseXp, 'is_active' => true],
+                ['name' => $name, 'ap_cost' => $apCost, 'base_xp' => $baseXp, 'effects' => $effects, 'is_active' => true],
             );
         }
     }
 
     private function seedBuildings(): void
     {
+        // Les 6 bâtiments visibles sur la carte de ville : chaque bâtiment de
+        // production booste la ressource qu'il incarne ; l'hôtel de ville
+        // entretient la loyauté (et héberge les votes de lois côté interface).
         $buildings = [
-            ['farm', 'Ferme', 'production', ['food_per_day' => 10], ['wood' => 50, 'food' => 20]],
-            ['sawmill', 'Scierie', 'production', ['wood_per_day' => 10], ['wood' => 40, 'stone' => 20]],
-            ['quarry', 'Carrière', 'production', ['stone_per_day' => 10], ['wood' => 40, 'stone' => 20]],
-            ['barracks', 'Caserne', 'military', ['soldier_capacity' => 50], ['wood' => 80, 'stone' => 60]],
-            ['warehouse', 'Entrepôt', 'storage', ['storage' => 500], ['wood' => 60, 'stone' => 40]],
-            ['wall', 'Muraille', 'defense', ['defense' => 10], ['stone' => 120]],
+            ['town_hall', 'Hôtel de ville', 'civic', ['loyalty_per_day' => 2], ['wood' => 50, 'stone' => 50]],
+            ['farm', 'Ferme', 'production', ['food_bonus_pct' => 10], ['wood' => 50, 'stone' => 10]],
+            ['forest', 'Forêt', 'production', ['wood_bonus_pct' => 10], ['wood' => 30, 'stone' => 20]],
+            ['mine', 'Mine de pierre', 'production', ['stone_bonus_pct' => 10], ['wood' => 40, 'stone' => 30]],
+            ['barracks', 'Caserne', 'military', ['soldiers_bonus_pct' => 10], ['wood' => 80, 'stone' => 60]],
+            ['market', 'Place du marché', 'production', ['gold_bonus_pct' => 10], ['wood' => 60, 'stone' => 40]],
         ];
 
         foreach ($buildings as [$key, $name, $category, $bonus, $cost]) {
@@ -129,7 +137,6 @@ class DemoGameSeeder extends Seeder
                     [
                         'bonus' => array_map(fn (int $value): int => $value * $level, $bonus),
                         'cost' => array_map(fn (int $value): int => $value * $level, $cost),
-                        'build_points' => 10 * $level,
                     ],
                 );
             }
@@ -155,17 +162,28 @@ class DemoGameSeeder extends Seeder
     private function seedEvents(): void
     {
         $events = [
-            ['Trésor caché', 'Vous découvrez un coffre oublié.', ['gold' => 50, 'xp' => 5], 40],
-            ['Embuscade', 'Des bandits attaquent votre convoi.', ['soldiers' => -2, 'loyalty' => -2], 30],
-            ['Bonne récolte', 'Un fermier reconnaissant vous offre des vivres.', ['food' => 30], 20],
-            ['Élan de ferveur', 'Le peuple acclame son seigneur.', ['loyalty' => 5], 10],
-            ['Journée bénie', 'Le seigneur vous accorde une action supplémentaire.', ['free_action' => 1], 5],
+            [EventType::Adventure, 'Trésor caché', 'Vous découvrez un coffre oublié.', ['gold' => 50], EventDifficulty::Easy, 40],
+            [EventType::Adventure, 'Bonne récolte', 'Un fermier reconnaissant offre des vivres.', ['food' => 30], EventDifficulty::Easy, 30],
+            [EventType::Adventure, 'Embuscade', 'Des bandits attaquent le convoi.', ['soldiers' => -2, 'loyalty' => -2], EventDifficulty::Medium, 20],
+            [EventType::Adventure, 'Peste', 'Une épidémie frappe la ville.', ['loyalty' => -5, 'food' => -20], EventDifficulty::Hard, 10],
+            [EventType::Adventure, 'Journée bénie', 'Le seigneur accorde une action supplémentaire.', ['free_action' => 1], EventDifficulty::Easy, 5],
+
+            [EventType::World, 'Raid de pillards', 'Des pillards ravagent les abords de la ville.', ['gold' => -30, 'loyalty' => -3], EventDifficulty::Easy, 30],
+            [EventType::World, 'Disette', 'Les réserves de nourriture s\'épuisent.', ['food' => -25, 'loyalty' => -5], EventDifficulty::Medium, 20],
+            [EventType::World, 'Révolte populaire', 'Le peuple se soulève contre l\'autorité.', ['loyalty' => -10, 'soldiers' => -3], EventDifficulty::Hard, 10],
         ];
 
-        foreach ($events as [$name, $description, $effects, $weight]) {
+        foreach ($events as [$type, $name, $description, $effects, $difficulty, $weight]) {
             Event::firstOrCreate(
                 ['name' => $name],
-                ['type' => EventType::Adventure, 'description' => $description, 'effects' => $effects, 'weight' => $weight, 'is_active' => true],
+                [
+                    'type' => $type,
+                    'difficulty' => $difficulty,
+                    'description' => $description,
+                    'effects' => $effects,
+                    'weight' => $weight,
+                    'is_active' => true,
+                ],
             );
         }
     }
@@ -211,6 +229,8 @@ class DemoGameSeeder extends Seeder
                 'email_verified_at' => now(),
                 'terms_accepted_at' => now(),
                 'privacy_policy_version' => '1.0',
+                'xp' => 0,
+                'title_id' => $paysan->id,
             ],
         );
 
@@ -223,52 +243,104 @@ class DemoGameSeeder extends Seeder
                 'email_verified_at' => now(),
                 'terms_accepted_at' => now(),
                 'privacy_policy_version' => '1.0',
+                'xp' => 0,
+                'title_id' => $paysan->id,
+            ],
+        );
+
+        User::firstOrCreate(
+            ['email' => 'researcher@medieval-realm.test'],
+            [
+                'username' => 'chercheur',
+                'password' => 'password',
+                'role' => UserRole::Researcher,
+                'email_verified_at' => now(),
+                'terms_accepted_at' => now(),
+                'privacy_policy_version' => '1.0',
+                'xp' => 0,
+                'title_id' => $paysan->id,
             ],
         );
 
         $game = Game::firstOrCreate(
             ['name' => 'France Médiévale — Saison 1'],
             [
+                'country_id' => $france->id,
                 'status' => GameStatus::Active,
                 'config' => [
                     'daily_actions' => 5,
+                    'build_step' => 20,
                     'upkeep_hour' => '12:00',
                     'vote_hours' => 12,
                     'soldier_upkeep' => ['gold' => 1, 'food' => 1],
                     'desertion_rate' => 0.2,
+                    'upkeep_loyalty_penalty' => 5,
                 ],
                 'started_at' => now(),
                 'created_by' => $admin->id,
             ],
         );
 
+        $towns = [
+            'Paris' => [
+                'position' => [480, 300],
+                'resources' => ['gold', 'food', 'soldiers', 'wood', 'stone'],
+                'pois' => [
+                    'town_hall' => [400, 300],
+                    'barracks' => [150, 230],
+                    'market' => [240, 520],
+                    'mine' => [735, 150],
+                    'farm' => [770, 470],
+                    'forest' => [785, 760],
+                ],
+            ],
+            'Lyon' => [
+                'position' => [590, 620],
+                'resources' => ['gold', 'food', 'soldiers', 'wood', 'stone'],
+                'pois' => [
+                    'town_hall' => [400, 300],
+                    'market' => [240, 520],
+                    'farm' => [770, 470],
+                    'forest' => [785, 760],
+                ],
+            ],
+        ];
+
+        $createdTowns = [];
+
+        foreach ($towns as $name => $config) {
+            [$x, $y] = $config['position'];
+
+            $town = Town::firstOrCreate(
+                ['game_id' => $game->id, 'name' => $name],
+                ['country_id' => $france->id, 'map_x' => $x, 'map_y' => $y, 'population' => 0, 'loyalty' => 100],
+            );
+
+            foreach ($config['resources'] as $key) {
+                $resource = Resource::query()->where('key', $key)->firstOrFail();
+
+                TownResource::firstOrCreate(
+                    ['town_id' => $town->id, 'resource_id' => $resource->id],
+                    ['amount' => 0, 'capacity' => $key === 'soldiers' ? null : 1000],
+                );
+            }
+
+            foreach ($config['pois'] as $key => [$poiX, $poiY]) {
+                $building = Building::query()->where('key', $key)->firstOrFail();
+
+                TownBuilding::firstOrCreate(
+                    ['town_id' => $town->id, 'building_id' => $building->id],
+                    ['level' => 0, 'contributions' => [], 'map_x' => $poiX, 'map_y' => $poiY],
+                );
+            }
+
+            $createdTowns[$name] = $town;
+        }
+
         $player = Player::firstOrCreate(
             ['user_id' => $playerUser->id, 'game_id' => $game->id],
-            ['country_id' => $france->id, 'title_id' => $paysan->id, 'display_name' => 'Seigneur Démo', 'xp' => 0],
+            ['country_id' => $france->id, 'current_town_id' => $createdTowns['Paris']->id],
         );
-
-        $town = Town::firstOrCreate(
-            ['game_id' => $game->id, 'player_id' => $player->id],
-            ['country_id' => $france->id, 'name' => 'Paris', 'population' => 250, 'loyalty' => 100],
-        );
-
-        $startingResources = ['gold' => 500, 'wood' => 300, 'stone' => 200, 'food' => 400, 'soldiers' => 10];
-
-        foreach ($startingResources as $key => $amount) {
-            $resource = Resource::query()->where('key', $key)->firstOrFail();
-
-            TownResource::firstOrCreate(
-                ['town_id' => $town->id, 'resource_id' => $resource->id],
-                ['amount' => $amount, 'capacity' => $key === 'soldiers' ? null : 1000],
-            );
-        }
-
-        foreach (Building::all() as $building) {
-            TownBuilding::firstOrCreate(
-                ['town_id' => $town->id, 'building_id' => $building->id],
-                ['level' => 0, 'build_progress' => 0],
-            );
-        }
 
         foreach (Quest::all() as $quest) {
             PlayerQuest::firstOrCreate(

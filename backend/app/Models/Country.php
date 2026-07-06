@@ -29,6 +29,14 @@ class Country extends Model
     }
 
     /**
+     * @return HasMany<Game, $this>
+     */
+    public function games(): HasMany
+    {
+        return $this->hasMany(Game::class);
+    }
+
+    /**
      * @return HasMany<Town, $this>
      */
     public function towns(): HasMany

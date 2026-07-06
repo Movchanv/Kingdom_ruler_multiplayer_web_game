@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $destroyed_at
+ */
 class Town extends Model
 {
     /** @use HasFactory<TownFactory> */
@@ -19,17 +23,22 @@ class Town extends Model
     protected $fillable = [
         'game_id',
         'country_id',
-        'player_id',
         'name',
+        'map_x',
+        'map_y',
         'population',
         'loyalty',
+        'destroyed_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'map_x' => 'integer',
+            'map_y' => 'integer',
             'population' => 'integer',
             'loyalty' => 'integer',
+            'destroyed_at' => 'datetime',
         ];
     }
 
@@ -50,11 +59,13 @@ class Town extends Model
     }
 
     /**
-     * @return BelongsTo<Player, $this>
+     * Players currently located in this town.
+     *
+     * @return HasMany<Player, $this>
      */
-    public function player(): BelongsTo
+    public function players(): HasMany
     {
-        return $this->belongsTo(Player::class);
+        return $this->hasMany(Player::class, 'current_town_id');
     }
 
     /**

@@ -21,7 +21,7 @@ async function submit() {
   try {
     await auth.login({ ...form, device_name: 'web' })
     toast.success('Connexion réussie.')
-    router.push(route.query.redirect ?? { name: 'home' })
+    router.push(route.query.redirect ?? { name: 'play' })
   } catch {
   } finally {
     submitting.value = false

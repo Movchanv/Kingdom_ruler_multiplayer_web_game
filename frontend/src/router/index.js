@@ -41,8 +41,32 @@ const routes = [
   {
     path: '/play',
     name: 'play',
-    component: () => import('@/pages/PlayPage.vue'),
-    meta: { requiresAuth: true },
+    component: () => import('@/pages/WorldMapPage.vue'),
+    meta: { requiresAuth: true, layout: 'blank' },
+  },
+  {
+    path: '/play/kingdom',
+    name: 'kingdom',
+    component: () => import('@/pages/CountryMapPage.vue'),
+    meta: { requiresAuth: true, layout: 'blank' },
+  },
+  {
+    path: '/play/town',
+    name: 'town',
+    component: () => import('@/pages/TownPage.vue'),
+    meta: { requiresAuth: true, layout: 'blank' },
+  },
+  {
+    path: '/play/seasons/:id',
+    name: 'season-results',
+    component: () => import('@/pages/SeasonResultsPage.vue'),
+    meta: { requiresAuth: true, layout: 'blank' },
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('@/pages/AdminPage.vue'),
+    meta: { requiresAuth: true, layout: 'blank' },
   },
   {
     path: '/:pathMatch(.*)*',

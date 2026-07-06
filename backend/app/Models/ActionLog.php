@@ -12,6 +12,7 @@ class ActionLog extends Model
     protected $fillable = [
         'game_id',
         'player_id',
+        'town_id',
         'action_id',
         'event_id',
         'payload',
@@ -42,6 +43,14 @@ class ActionLog extends Model
     public function player(): BelongsTo
     {
         return $this->belongsTo(Player::class);
+    }
+
+    /**
+     * @return BelongsTo<Town, $this>
+     */
+    public function town(): BelongsTo
+    {
+        return $this->belongsTo(Town::class);
     }
 
     /**

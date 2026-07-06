@@ -14,6 +14,7 @@ class Building extends Model
         'name',
         'description',
         'category',
+        'image',
         'max_level',
         'is_active',
     ];

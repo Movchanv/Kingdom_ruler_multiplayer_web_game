@@ -7,20 +7,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $level
+ * @property array<string, int>|null $contributions
+ */
 class TownBuilding extends Model
 {
     protected $fillable = [
         'town_id',
         'building_id',
         'level',
-        'build_progress',
+        'contributions',
+        'map_x',
+        'map_y',
+        'image',
     ];
 
     protected function casts(): array
     {
         return [
             'level' => 'integer',
-            'build_progress' => 'integer',
+            'contributions' => 'array',
+            'map_x' => 'integer',
+            'map_y' => 'integer',
         ];
     }
 
