@@ -81,6 +81,21 @@ services:
     networks:
       - realm
 
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:prod
+    restart: alwayss
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
+
   postgres:
     image: postgres:16-alpine
     restart: always

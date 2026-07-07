@@ -114,6 +114,20 @@ services:
       - redis
     networks:
       - realm
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: medieval-realm/backend:latest
+    restart: unless-stopped
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - realm
 
 networks:
   realm:
