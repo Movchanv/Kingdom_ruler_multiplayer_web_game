@@ -1,8 +1,3 @@
-/**
- * Habillage front des bâtiments de ville : icône provisoire (remplacée plus
- * tard par des vignettes PNG), action de production associée et libellés.
- * La clé correspond à `buildings.key` côté API.
- */
 export const BUILDING_META = {
   town_hall: {
     icon: '🏛️',
@@ -50,7 +45,29 @@ export function buildingMeta(key) {
   return BUILDING_META[key] ?? { icon: '🏚️', description: '' }
 }
 
-/** Icônes des ressources (barre de la ville, coûts, gains). */
+export const BUILDING_IMAGES = {
+  town_hall: '/buildings/hotel-de-ville.png',
+  farm: '/buildings/ferme.png',
+  forest: '/buildings/foret.png',
+  mine: '/buildings/mine-de-pierre.png',
+  barracks: '/buildings/caserne.png',
+  market: '/buildings/place-du-marche.png',
+}
+
+export function buildingImageFor(key) {
+  return BUILDING_IMAGES[key] ?? null
+}
+
+export const ADVENTURE_IMAGE = '/buildings/aventure.png'
+
+export const TOWN_EMBLEMS = {
+  Paris: '/towns/paris.png',
+}
+
+export function townEmblemFor(name) {
+  return TOWN_EMBLEMS[name] ?? null
+}
+
 export const RESOURCE_ICONS = {
   gold: '🪙',
   food: '🍞',
@@ -65,7 +82,6 @@ export function resourceIcon(key) {
   return RESOURCE_ICONS[key] ?? '📦'
 }
 
-/** Noms français des ressources (libellés de bonus). */
 const RESOURCE_NAMES = {
   gold: 'or',
   food: 'nourriture',
@@ -75,7 +91,6 @@ const RESOURCE_NAMES = {
   loyalty: 'loyauté',
 }
 
-/** Libellé lisible d'un effet de loi/bâtiment ("gold_bonus_pct: 10" → "+10 % de production d'or"). */
 export function bonusLabel(key, value) {
   if (key.endsWith('_bonus_pct')) {
     const resource = key.slice(0, -'_bonus_pct'.length)
@@ -92,7 +107,6 @@ export function bonusLabel(key, value) {
   return `${key} : ${value}`
 }
 
-/** Image de fond de chaque ville (clé = nom de la ville côté API). */
 export const TOWN_IMAGES = {
   Paris: '/town-paris.png',
 }
@@ -101,13 +115,10 @@ export function townImageFor(name) {
   return TOWN_IMAGES[name] ?? null
 }
 
-/** Ratio largeur/hauteur des images de ville (town-paris.png : 1536×1024). */
+
 export const TOWN_IMAGE_RATIO = '3 / 2'
 
-/**
- * Emplacement du départ en aventure : les portes de la ville (grille 1000 × 1000,
- * clé = nom de la ville). Sur town-paris.png : la porte principale près du pont.
- */
+
 export const ADVENTURE_SPOTS = {
   Paris: { x: 140, y: 690 },
 }

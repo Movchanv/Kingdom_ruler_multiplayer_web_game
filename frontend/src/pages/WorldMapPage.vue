@@ -5,8 +5,14 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import { useGameStore } from '@/stores/game'
 import { gameService } from '@/services/game.service'
-import { WORLD_MAP_IMAGE, positionFor } from '@/config/worldMap'
+import {
+  WORLD_MAP_IMAGE,
+  WORLD_MAP_RATIO,
+  positionFor,
+  countryOverlayFor,
+} from '@/config/worldMap'
 import CountryMarker from '@/components/game/CountryMarker.vue'
+import CountryOverlay from '@/components/game/CountryOverlay.vue'
 
 const auth = useAuthStore()
 const game = useGameStore()
@@ -66,7 +72,10 @@ async function joinSelected() {
 
 <template>
   <div class="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-iron-900">
-    <div class="world-map relative aspect-square max-h-full max-w-full">
+    <div
+      class="world-map relative max-h-full max-w-full"
+      :style="{ aspectRatio: WORLD_MAP_RATIO }"
+    >
       <img
         v-if="!mapImageMissing"
         :src="WORLD_MAP_IMAGE"
@@ -86,15 +95,24 @@ async function joinSelected() {
         </p>
       </div>
 
-      <CountryMarker
-        v-for="country in game.countries"
-        :key="country.id"
-        :country="country"
-        :position="positionFor(country.slug)"
-        :variant="variantFor(country)"
-        :selected="selectedCountry?.id === country.id"
-        @select="selectCountry"
-      />
+      <template v-for="country in game.countries" :key="country.id">
+        <CountryOverlay
+          v-if="countryOverlayFor(country.slug)"
+          :country="country"
+          :image="countryOverlayFor(country.slug)"
+          :variant="variantFor(country)"
+          :selected="selectedCountry?.id === country.id"
+          @select="selectCountry"
+        />
+        <CountryMarker
+          v-else
+          :country="country"
+          :position="positionFor(country.slug)"
+          :variant="variantFor(country)"
+          :selected="selectedCountry?.id === country.id"
+          @select="selectCountry"
+        />
+      </template>
     </div>
 
     <div class="pointer-events-none absolute inset-0 shadow-[inset_0_0_120px_40px_rgba(0,0,0,0.55)]" />
@@ -116,6 +134,13 @@ async function joinSelected() {
         </div>
         <RouterLink v-if="user?.role === 'admin'" :to="{ name: 'admin' }" class="btn-ghost">
           ⚙️ Admin
+        </RouterLink>
+        <RouterLink
+          v-if="['researcher', 'admin'].includes(user?.role)"
+          :to="{ name: 'research' }"
+          class="btn-ghost"
+        >
+          🔬 Recherche
         </RouterLink>
         <button type="button" class="btn-ghost" @click="auth.logout()">Déconnexion</button>
       </div>

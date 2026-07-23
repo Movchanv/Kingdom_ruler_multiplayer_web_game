@@ -1,13 +1,17 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   town: { type: Object, required: true },
-  position: { type: Object, required: true }, // { x, y } en % de la carte
+  position: { type: Object, required: true },
+  emblem: { type: String, default: null },
   selected: { type: Boolean, default: false },
 })
 
 defineEmits(['select'])
+
+const emblemMissing = ref(false)
+const useEmblem = computed(() => Boolean(props.emblem) && !emblemMissing.value)
 
 const markerStyle = computed(() => ({
   left: `${props.position.x}%`,
@@ -22,7 +26,6 @@ const variant = computed(() => {
   return props.town.is_current ? 'current' : 'available'
 })
 
-// Icône provisoire — sera remplacée par une petite image PNG de la ville.
 const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
 </script>
 
@@ -30,17 +33,32 @@ const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
   <button
     type="button"
     class="town-marker group absolute -translate-x-1/2 -translate-y-1/2"
-    :class="[`town-marker--${variant}`, { 'town-marker--selected': selected }]"
+    :class="[
+      `town-marker--${variant}`,
+      { 'town-marker--selected': selected, 'town-marker--emblem': useEmblem },
+    ]"
     :style="markerStyle"
     :title="town.name"
     :disabled="isDestroyed"
     @click="$emit('select', town)"
   >
     <span v-if="town.is_current" class="here-flag">Vous êtes ici</span>
-    <span class="badge">
-      <span class="text-xl leading-none drop-shadow">{{ icon }}</span>
-    </span>
-    <span class="nameplate">{{ town.name }}</span>
+
+    <img
+      v-if="useEmblem"
+      :src="emblem"
+      :alt="town.name"
+      class="emblem"
+      draggable="false"
+      @error="emblemMissing = true"
+    />
+
+    <template v-else>
+      <span class="badge">
+        <span class="text-xl leading-none drop-shadow">{{ icon }}</span>
+      </span>
+      <span class="nameplate">{{ town.name }}</span>
+    </template>
   </button>
 </template>
 
@@ -58,19 +76,47 @@ const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
 }
 
 .here-flag {
-  @apply whitespace-nowrap rounded-full bg-gold-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-iron-900 shadow;
+  @apply z-10 whitespace-nowrap rounded-full bg-gold-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-iron-900 shadow;
 }
 
-/* Ville accessible. */
+.emblem {
+  @apply pointer-events-none h-28 w-28 select-none object-contain drop-shadow-lg transition-all duration-200;
+}
+
+
+.town-marker--emblem.town-marker--available .emblem {
+  filter: saturate(0.92);
+}
+.town-marker--emblem.town-marker--available:hover,
+.town-marker--emblem.town-marker--available:focus-visible,
+.town-marker--emblem.town-marker--available.town-marker--selected {
+  transform: translate(-50%, -50%) translateY(-5px) scale(1.08);
+}
+.town-marker--emblem.town-marker--available:hover .emblem,
+.town-marker--emblem.town-marker--available:focus-visible .emblem,
+.town-marker--emblem.town-marker--available.town-marker--selected .emblem {
+  filter: saturate(1.1) brightness(1.06) drop-shadow(0 0 14px rgba(245, 197, 66, 0.55));
+}
+.town-marker--emblem.town-marker--current .emblem {
+  filter: drop-shadow(0 0 16px rgba(245, 197, 66, 0.5));
+}
+.town-marker--emblem.town-marker--current:hover,
+.town-marker--emblem.town-marker--current.town-marker--selected {
+  transform: translate(-50%, -50%) translateY(-5px) scale(1.08);
+}
+.town-marker--emblem.town-marker--destroyed .emblem {
+  filter: grayscale(1) brightness(0.6);
+}
+
 .town-marker--available .badge {
   @apply border-parchment-200/70;
 }
 .town-marker--available .nameplate {
   @apply border-parchment-200/40 bg-iron-900/85 text-parchment-100;
 }
-.town-marker--available:hover,
-.town-marker--available:focus-visible,
-.town-marker--available.town-marker--selected {
+.town-marker:not(.town-marker--emblem).town-marker--available:hover,
+.town-marker:not(.town-marker--emblem).town-marker--available:focus-visible,
+.town-marker:not(.town-marker--emblem).town-marker--available.town-marker--selected {
   transform: translate(-50%, -50%) translateY(-4px) scale(1.1);
 }
 .town-marker--available:hover .badge,
@@ -85,7 +131,6 @@ const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
   @apply border-gold-400 text-gold-400;
 }
 
-/* Ville courante : halo doré permanent. */
 .town-marker--current .badge {
   @apply border-gold-400;
   box-shadow: 0 0 18px 4px rgba(245, 197, 66, 0.45);
@@ -93,14 +138,16 @@ const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
 .town-marker--current .nameplate {
   @apply border-gold-400 bg-gold-500 font-semibold text-iron-900;
 }
-.town-marker--current:hover,
-.town-marker--current.town-marker--selected {
+.town-marker:not(.town-marker--emblem).town-marker--current:hover,
+.town-marker:not(.town-marker--emblem).town-marker--current.town-marker--selected {
   transform: translate(-50%, -50%) translateY(-4px) scale(1.1);
 }
 
-/* Ville détruite : en ruines, inerte. */
 .town-marker--destroyed {
-  @apply cursor-not-allowed opacity-60 grayscale;
+  @apply cursor-not-allowed;
+}
+.town-marker:not(.town-marker--emblem).town-marker--destroyed {
+  @apply opacity-60 grayscale;
 }
 .town-marker--destroyed .badge {
   @apply border-iron-700;
