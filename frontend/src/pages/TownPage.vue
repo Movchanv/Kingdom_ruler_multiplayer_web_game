@@ -10,8 +10,12 @@ import {
   TOWN_IMAGE_RATIO,
   resourceIcon,
   adventureSpotFor,
+  buildingImageFor,
+  ADVENTURE_IMAGE,
 } from '@/config/townBuildings'
+import { rectFor } from '@/config/townRects'
 import BuildingMarker from '@/components/game/BuildingMarker.vue'
+import BuildingHotspot from '@/components/game/BuildingHotspot.vue'
 import BuildingPanel from '@/components/game/BuildingPanel.vue'
 import AdventurePanel from '@/components/game/AdventurePanel.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
@@ -74,6 +78,21 @@ onUnmounted(() => {
 function positionOf(building) {
   return { x: toPercent(building.map_x), y: toPercent(building.map_y) }
 }
+
+const buildingViews = computed(() =>
+  (town.value?.buildings ?? []).map((building) => {
+    const rect = rectFor(town.value?.name, building.key)
+    const image = buildingImageFor(building.key)
+
+    return { building, hotspot: rect && image ? { rect, image } : null }
+  }),
+)
+
+const adventureHotspot = computed(() => {
+  const rect = rectFor(town.value?.name, 'adventure')
+
+  return rect ? { rect, image: ADVENTURE_IMAGE } : null
+})
 </script>
 
 <template>
@@ -99,17 +118,36 @@ function positionOf(building) {
         </p>
       </div>
 
-      <BuildingMarker
-        v-for="building in town?.buildings ?? []"
-        :key="building.id"
-        :building="building"
-        :position="positionOf(building)"
-        :selected="selectedBuilding?.id === building.id"
-        @select="selectedBuilding = $event"
-      />
+      <template v-for="view in buildingViews" :key="view.building.id">
+        <BuildingHotspot
+          v-if="view.hotspot"
+          :image="view.hotspot.image"
+          :rect="view.hotspot.rect"
+          :label="view.building.name"
+          :level="view.building.level"
+          :selected="selectedBuilding?.id === view.building.id"
+          @select="selectedBuilding = view.building"
+        />
+        <BuildingMarker
+          v-else
+          :building="view.building"
+          :position="positionOf(view.building)"
+          :selected="selectedBuilding?.id === view.building.id"
+          @select="selectedBuilding = $event"
+        />
+      </template>
 
+      <BuildingHotspot
+        v-if="town && adventureHotspot"
+        :image="adventureHotspot.image"
+        :rect="adventureHotspot.rect"
+        label="S'aventurer"
+        accent="red"
+        :selected="adventureOpen"
+        @select="adventureOpen = true"
+      />
       <button
-        v-if="town"
+        v-else-if="town"
         type="button"
         class="adventure-marker group absolute -translate-x-1/2 -translate-y-1/2"
         :class="{ 'adventure-marker--selected': adventureOpen }"

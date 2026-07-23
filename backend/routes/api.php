@@ -83,6 +83,10 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('research/overview', [ResearchController::class, 'overview'])->name('research.overview');
                 Route::get('research/actions', [ResearchController::class, 'actions'])->name('research.actions');
                 Route::get('research/seasons', [ResearchController::class, 'seasons'])->name('research.seasons');
+
+                // Téléchargements CSV (compatibles Excel).
+                Route::get('research/exports/actions', [ResearchController::class, 'exportActions'])->name('research.exports.actions');
+                Route::get('research/exports/seasons', [ResearchController::class, 'exportSeasons'])->name('research.exports.seasons');
             });
         });
     });

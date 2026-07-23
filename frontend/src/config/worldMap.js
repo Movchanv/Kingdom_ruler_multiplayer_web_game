@@ -26,6 +26,23 @@ export function countryMapFor(slug) {
 }
 
 /**
+ * Calque plein cadre de chaque pays, superposé sur la carte du monde et aligné
+ * pixel-perfect (même dimensions que world-map.png, 1402×1122). Chaque calque
+ * ne dessine que sa région ; le reste est transparent.
+ */
+export const COUNTRY_OVERLAYS = {
+  'france-medievale': '/overlays/france.png',
+}
+
+export function countryOverlayFor(slug) {
+  return COUNTRY_OVERLAYS[slug] ?? null
+}
+
+/** Ratios largeur/hauteur des cartes (pour un alignement exact des calques). */
+export const WORLD_MAP_RATIO = '1402 / 1122'
+export const COUNTRY_MAP_RATIO = '3 / 2'
+
+/**
  * Les coordonnées des villes/POI côté API sont exprimées sur une grille de
  * 1000 × 1000 ; on les convertit en % de l'image.
  */

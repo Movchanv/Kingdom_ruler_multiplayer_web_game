@@ -77,6 +77,63 @@ final class ResearchTest extends TestCase
             ->assertJsonPath('data.0.xp', 15);
     }
 
+    public function test_action_usage_can_be_downloaded_as_csv(): void
+    {
+        $country = Country::factory()->create();
+        $game = Game::factory()->create(['country_id' => $country->id]);
+        $town = Town::factory()->create(['game_id' => $game->id, 'country_id' => $country->id]);
+        $user = User::factory()->create();
+        $player = Player::factory()->create([
+            'user_id' => $user->id,
+            'game_id' => $game->id,
+            'country_id' => $country->id,
+            'current_town_id' => $town->id,
+        ]);
+        $action = Action::create(['key' => 'mine_gold', 'name' => 'Miner', 'ap_cost' => 1, 'base_xp' => 5, 'effects' => null, 'is_active' => true]);
+        ActionLog::create(['game_id' => $game->id, 'player_id' => $player->id, 'town_id' => $town->id, 'action_id' => $action->id, 'xp_gained' => 5]);
+
+        Sanctum::actingAs($this->researcher());
+
+        $response = $this->get('/api/v1/research/exports/actions');
+
+        $response->assertOk()
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('mine_gold', $response->getContent());
+    }
+
+    public function test_season_rankings_can_be_downloaded_as_csv_without_identities(): void
+    {
+        $country = Country::factory()->create();
+        Game::factory()->create([
+            'country_id' => $country->id,
+            'status' => GameStatus::Ended,
+            'ended_at' => now(),
+            'results' => [
+                'reason' => 'all_towns_destroyed',
+                'ranking' => [
+                    ['rank' => 1, 'player_id' => 1, 'user_id' => 42, 'xp' => 100, 'actions' => 10],
+                ],
+            ],
+        ]);
+
+        Sanctum::actingAs($this->researcher());
+
+        $response = $this->get('/api/v1/research/exports/seasons');
+
+        $response->assertOk()
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('subject', $response->getContent());
+        $this->assertStringNotContainsString('user_id', $response->getContent());
+    }
+
+    public function test_a_player_cannot_download_exports(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Player]));
+
+        $this->get('/api/v1/research/exports/actions')->assertForbidden();
+    }
+
     public function test_ended_season_rankings_are_pseudonymized(): void
     {
         $country = Country::factory()->create();

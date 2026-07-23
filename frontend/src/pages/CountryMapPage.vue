@@ -4,7 +4,8 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import { useGameStore } from '@/stores/game'
-import { countryMapFor, toPercent } from '@/config/worldMap'
+import { countryMapFor, toPercent, COUNTRY_MAP_RATIO } from '@/config/worldMap'
+import { townEmblemFor } from '@/config/townBuildings'
 import TownMarker from '@/components/game/TownMarker.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
 
@@ -54,7 +55,7 @@ async function travelToSelected() {
 
 <template>
   <div class="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-iron-900">
-    <div class="relative aspect-square max-h-full max-w-full">
+    <div class="relative max-h-full max-w-full" :style="{ aspectRatio: COUNTRY_MAP_RATIO }">
       <img
         v-if="mapImage && !mapImageMissing"
         :src="mapImage"
@@ -80,6 +81,7 @@ async function travelToSelected() {
         :key="town.id"
         :town="town"
         :position="positionOf(town)"
+        :emblem="townEmblemFor(town.name)"
         :selected="selectedTown?.id === town.id"
         @select="selectedTown = $event"
       />
