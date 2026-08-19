@@ -13,7 +13,7 @@
         "laravel/horizon": "^5.47",
         "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.3",
-        "laravel/tinker": "^2.9",
+        "laravel/tinker": "^3.0",
         "predis/predis": "^3.5"
     },
     "require-dev": {
