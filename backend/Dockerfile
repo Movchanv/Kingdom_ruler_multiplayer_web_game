@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM php:8.3-fpm AS base
+FROM php:8.5-fpm AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
