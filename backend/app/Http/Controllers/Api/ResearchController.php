@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
-
 final class ResearchController extends Controller
 {
     use ApiResponse;
@@ -144,7 +143,6 @@ final class ResearchController extends Controller
     }
 
     /**
-     *
      * @param  array<int, string>  $header
      * @param  array<int, array<int, string|int|null>>  $rows
      */

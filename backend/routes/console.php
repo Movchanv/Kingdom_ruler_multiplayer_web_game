@@ -11,3 +11,5 @@ Schedule::command('votes:close')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('game:upkeep')->twiceDaily(0, 12)->withoutOverlapping();
 
 Schedule::command('model:prune')->daily()->withoutOverlapping();
+
+Schedule::command('monitoring:heartbeat')->everyMinute();
