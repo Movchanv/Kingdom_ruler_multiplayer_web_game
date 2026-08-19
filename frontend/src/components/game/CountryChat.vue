@@ -5,7 +5,11 @@ import { useEcho } from '@/composables/useEcho'
 import { gameService } from '@/services/game.service'
 
 const game = useGameStore()
-const { echo } = useEcho()
+const { echo, onReconnect } = useEcho()
+
+onReconnect(() => {
+  if (countryId.value) loadHistory()
+})
 
 const open = ref(false)
 const messages = ref([])
@@ -50,7 +54,6 @@ async function loadHistory() {
     append(message, { silent: true })
   }
 
-  // Des messages temps réel ont pu arriver pendant le chargement.
   messages.value.sort((a, b) => a.id - b.id)
   scrollToBottom()
 }
@@ -60,7 +63,6 @@ function subscribe(id) {
   echo.private(channelName).listen('.chat.message', (payload) => append(payload))
 }
 
-// Dès que le joueur (et donc son pays) est connu : abonnement + historique.
 watch(
   countryId,
   (id) => {

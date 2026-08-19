@@ -52,6 +52,9 @@ jobs:
       - name: Tests (PHPUnit, SQLite in-memory)
         run: php artisan test --coverage
 
+      - name: Composer audit (vulnérabilités des dépendances)
+        run: composer audit --no-interaction
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest
@@ -76,3 +79,6 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: npm audit (vulnérabilités des dépendances)
+        run: npm audit --audit-level=high

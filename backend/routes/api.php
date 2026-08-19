@@ -11,9 +11,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GameController;
+use App\Http\Controllers\Api\MonitoringController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\RealtimeDemoController;
 use App\Http\Controllers\Api\ResearchController;
+use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\VoteController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +44,10 @@ Route::prefix('v1')->group(function (): void {
             ->middleware('throttle:6,1')
             ->name('verification.send');
 
+        Route::post('support/reports', [SupportController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('support.reports.store');
+
         Route::get('account/export', [AccountController::class, 'export'])->name('account.export');
         Route::get('account/consent', [AccountController::class, 'consent'])->name('account.consent');
         Route::post('account/consent', [AccountController::class, 'acceptConsent'])->name('account.consent.accept');
@@ -68,6 +74,8 @@ Route::prefix('v1')->group(function (): void {
 
             Route::middleware('admin')->group(function (): void {
                 Route::get('admin/overview', [AdminController::class, 'overview'])->name('admin.overview');
+                Route::get('admin/monitoring', [MonitoringController::class, 'index'])->name('admin.monitoring');
+                Route::get('admin/bug-reports', [SupportController::class, 'index'])->name('admin.bug-reports');
                 Route::get('admin/games', [AdminController::class, 'games'])->name('admin.games');
                 Route::get('admin/laws', [AdminLawController::class, 'index'])->name('admin.laws.index');
                 Route::post('admin/laws', [AdminLawController::class, 'store'])->name('admin.laws.store');
@@ -84,7 +92,6 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('research/actions', [ResearchController::class, 'actions'])->name('research.actions');
                 Route::get('research/seasons', [ResearchController::class, 'seasons'])->name('research.seasons');
 
-                // Téléchargements CSV (compatibles Excel).
                 Route::get('research/exports/actions', [ResearchController::class, 'exportActions'])->name('research.exports.actions');
                 Route::get('research/exports/seasons', [ResearchController::class, 'exportSeasons'])->name('research.exports.seasons');
             });

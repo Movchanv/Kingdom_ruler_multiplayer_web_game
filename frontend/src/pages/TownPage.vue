@@ -23,7 +23,9 @@ import CountryChat from '@/components/game/CountryChat.vue'
 const auth = useAuthStore()
 const game = useGameStore()
 const router = useRouter()
-const { echo } = useEcho()
+const { echo, onReconnect } = useEcho()
+
+onReconnect(() => game.fetchState())
 
 const mapImageMissing = ref(false)
 const selectedBuilding = ref(null)
