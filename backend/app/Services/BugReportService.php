@@ -53,7 +53,6 @@ final class BugReportService
         return $report;
     }
 
-
     private function nextReference(): string
     {
         $year = now()->format('Y');

@@ -13,15 +13,15 @@ return new class extends Migration
         Schema::create('bug_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('reference')->unique();         
+            $table->string('reference')->unique();
             $table->string('title');
-            $table->string('severity')->index();            
-            $table->string('scope')->index();               
-            $table->text('description');                   
-            $table->string('page')->nullable();             
-            $table->json('context')->nullable();            
-            $table->string('status')->default('open')->index(); 
-            $table->text('resolution')->nullable();        
+            $table->string('severity')->index();
+            $table->string('scope')->index();
+            $table->text('description');
+            $table->string('page')->nullable();
+            $table->json('context')->nullable();
+            $table->string('status')->default('open')->index();
+            $table->text('resolution')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
 
