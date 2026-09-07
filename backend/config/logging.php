@@ -31,6 +31,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'anomalies' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/anomalies.log'),
+            'level' => 'debug',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

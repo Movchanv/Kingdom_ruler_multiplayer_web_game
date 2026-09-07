@@ -7,6 +7,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property array<string, int>|null $bonus
+ */
 class Law extends Model
 {
     protected $fillable = [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\GameStatus;
+use App\Models\Country;
 use App\Models\Game;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,12 +20,14 @@ class GameFactory extends Factory
     {
         return [
             'name' => fake()->unique()->city().' — Saison',
+            'country_id' => Country::factory(),
             'status' => GameStatus::Active,
             'config' => [
                 'daily_actions' => 5,
                 'upkeep_hour' => '12:00',
                 'vote_hours' => 12,
             ],
+            'results' => null,
             'started_at' => now(),
             'ended_at' => null,
             'created_by' => null,

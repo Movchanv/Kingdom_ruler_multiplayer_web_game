@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Player extends Model
 {
@@ -21,17 +20,8 @@ class Player extends Model
         'user_id',
         'game_id',
         'country_id',
-        'title_id',
-        'display_name',
-        'xp',
+        'current_town_id',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'xp' => 'integer',
-        ];
-    }
 
     /**
      * @return BelongsTo<User, $this>
@@ -58,19 +48,11 @@ class Player extends Model
     }
 
     /**
-     * @return BelongsTo<Title, $this>
+     * @return BelongsTo<Town, $this>
      */
-    public function title(): BelongsTo
+    public function currentTown(): BelongsTo
     {
-        return $this->belongsTo(Title::class);
-    }
-
-    /**
-     * @return HasOne<Town, $this>
-     */
-    public function town(): HasOne
-    {
-        return $this->hasOne(Town::class);
+        return $this->belongsTo(Town::class, 'current_town_id');
     }
 
     /**

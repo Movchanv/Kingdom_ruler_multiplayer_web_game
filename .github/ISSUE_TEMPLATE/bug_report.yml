@@ -1,0 +1,96 @@
+# Fiche de consignation d'une anomalie (C4.2.1).
+# Les champs garantissent que toute anomalie consignée contient les
+# informations nécessaires à sa reproduction, son analyse et sa correction.
+name: "Anomalie (bogue)"
+description: "Consigner une anomalie détectée dans le jeu"
+title: "[BUG] "
+labels: ["bug", "à qualifier"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de renseigner **toutes** les rubriques : elles conditionnent la
+        capacité de l'équipe à reproduire puis corriger l'anomalie.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Titre / résumé
+      description: Résumé court et explicite du problème
+      placeholder: "HTTP 419 « CSRF token mismatch » à l'inscription"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Sévérité
+      options:
+        - Bloquant (le jeu est inutilisable)
+        - Majeur (fonctionnalité importante dégradée)
+        - Mineur (gêne légère, contournement possible)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Périmètre
+      options:
+        - Backend (API)
+        - Frontend (interface)
+        - Infrastructure (Docker, CI/CD)
+        - Temps réel (WebSockets)
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environnement
+      description: Environnement, navigateur et système d'exploitation
+      placeholder: "staging — Chrome 120, Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes de reproduction
+      description: Suite d'actions permettant de reproduire le bogue
+      placeholder: |
+        1. Ouvrir l'écran d'inscription
+        2. Renseigner un compte valide
+        3. Valider le formulaire
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu
+      placeholder: "Compte créé (HTTP 201) et courriel de vérification envoyé"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Résultat observé
+      placeholder: "Réponse HTTP 419 « CSRF token mismatch », aucun compte créé"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Traces et pièces jointes
+      description: Extrait des journaux, réponse de l'API, capture d'écran, identifiant de corrélation
+      render: shell
+
+  - type: textarea
+    id: analysis
+    attributes:
+      label: Analyse et préconisation de correction
+      description: À compléter par l'équipe technique lors de la qualification

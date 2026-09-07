@@ -3,7 +3,6 @@ import { useToast } from 'vue-toastification'
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
-  withCredentials: true,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
@@ -38,6 +37,10 @@ api.interceptors.response.use(
     const toast = useToast()
     const status = error.response?.status
     const message = error.response?.data?.message ?? 'Une erreur est survenue.'
+
+    if (error.config?.skipToast && status !== 401) {
+      return Promise.reject(error)
+    }
 
     if (status === 401) {
       setToken(null)
