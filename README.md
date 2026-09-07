@@ -165,19 +165,55 @@ curl http://localhost/up      # {"status":"ok","checks":{"database":true,"cache"
 ### Passage en HTTPS
 
 Le certificat doit exister **avant** que Nginx charge la configuration TLS, sinon il refuse de
-démarrer. L'ordre ci-dessous est donc impératif (le domaine doit déjà pointer sur le serveur) :
+démarrer. L'ordre ci-dessous est donc impératif (le domaine doit déjà pointer sur le serveur).
+
+`--entrypoint certbot` n'est pas optionnel : le service `certbot` définit un `entrypoint` qui
+boucle sur le renouvellement. Sans cette option, `docker compose run` ne remplace que la
+*commande* — les arguments `certonly …` sont alors ignorés par ce script et c'est la boucle de
+renouvellement qui démarre, au lieu de l'émission du certificat.
+
+Renseigner d'abord les deux variables :
 
 ```bash
 export DOMAIN=mon-domaine.com CERTBOT_EMAIL=moi@exemple.com
+```
 
-# 1. la pile tourne en HTTP et sert déjà /.well-known/acme-challenge/
+**1.** La pile tourne en HTTP et sert déjà `/.well-known/acme-challenge/` :
+
+```bash
 docker compose -f docker-compose.prod.yml up -d
+```
 
-# 2. émission du certificat
-docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml   run --rm certbot certonly --webroot -w /var/www/certbot   -d "$DOMAIN" -d "www.$DOMAIN" --email "$CERTBOT_EMAIL" --agree-tos --no-eff-email
+**2.** Essai à blanc — valide tout le circuit sans consommer le quota Let's Encrypt (5 échecs de
+validation par heure, 5 certificats identiques par semaine) :
 
-# 3. bascule en TLS + renouvellement automatique toutes les 12 h
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" -d "www.$DOMAIN" --email "$CERTBOT_EMAIL" --agree-tos --no-eff-email --dry-run
+```
+
+Attendu : `The dry run was successful.`
+
+**3.** Émission réelle — la même commande sans `--dry-run` :
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" -d "www.$DOMAIN" --email "$CERTBOT_EMAIL" --agree-tos --no-eff-email
+```
+
+**4.** Bascule de Nginx en TLS et démarrage du renouvellement automatique (toutes les 12 h) :
+
+```bash
 docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml up -d
+```
+
+Vérification depuis un autre poste — la première commande doit renvoyer `{"status":"ok",…}`,
+la seconde un code `301` vers HTTPS :
+
+```bash
+curl -s https://$DOMAIN/up
+```
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN/
 ```
 
 ### Mise à jour du code

@@ -60,6 +60,11 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   (`medievalrealmkey`), ce qui empêchait toute connexion temps réel en production.
 - Nginx ne servait pas `/.well-known/acme-challenge/`, rendant impossible la validation de
   domaine par Let's Encrypt.
+- Documentation de mise en ligne : la commande d'émission du certificat omettait
+  `--entrypoint certbot`. Le service `certbot` définissant un `entrypoint`, `docker compose run`
+  ne remplaçait que la commande : les arguments `certonly` étaient ignorés et la boucle de
+  renouvellement démarrait à la place de l'émission. Ajout également d'une étape `--dry-run`
+  préalable, pour valider le circuit sans entamer le quota Let's Encrypt.
 
 ### Sécurité
 - Trafic de production chiffré de bout en bout : TLS 1.2/1.3, en-tête HSTS d'un an,
