@@ -19,7 +19,7 @@ async function handleLogout() {
     <header class="border-b border-iron-800 bg-iron-900/80 backdrop-blur">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <RouterLink to="/" class="text-xl font-heading text-gold-400">
-          Medieval Realm
+          Les Seigneuries
         </RouterLink>
 
         <nav class="flex items-center gap-4 text-sm">
@@ -40,7 +40,7 @@ async function handleLogout() {
     </main>
 
     <footer class="border-t border-iron-800 py-4 text-center text-xs text-iron-700">
-      Medieval Realm — base technique
+      Les Seigneuries — base technique
     </footer>
   </div>
 </template>
