@@ -26,6 +26,10 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - Procédure de déploiement détaillée (README, section 7) : préparation du serveur, mise en
   ligne en HTTP, bascule vers HTTPS et mise à jour du code.
 - Sondes de disponibilité sur les services `laravel` (port PHP-FPM) et `vue`.
+- Nom de domaine de production renseigné (`lesseigneuriesfr.fr`) dans `frontend/.env.production`
+  et dans le modèle `backend/.env.production.example`.
+- L'application s'intitule désormais « Les Seigneuries » dans l'interface (titre de l'onglet,
+  page d'accueil, en-tête et pied de page), en cohérence avec le nom de domaine.
 
 ### Modifié
 - Les identifiants de base de données et de cache sont injectés par Docker Compose dans les
