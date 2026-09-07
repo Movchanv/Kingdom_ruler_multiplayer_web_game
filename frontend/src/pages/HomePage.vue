@@ -96,7 +96,7 @@ onClickOutside(langRef, () => {
     <main
       class="pointer-events-none relative z-10 flex h-full flex-col items-center justify-center px-4 text-center"
     >
-      <h1 class="font-heading text-5xl text-gold-400 drop-shadow-lg sm:text-6xl">Medieval Realm</h1>
+      <h1 class="font-heading text-5xl text-gold-400 drop-shadow-lg sm:text-6xl">Les Seigneuries</h1>
       <p class="mt-3 max-w-md text-parchment-100/90">Bâtissez votre royaume, forgez votre légende.</p>
 
       <RouterLink to="/play" class="btn-play pointer-events-auto mt-10">Jouer</RouterLink>
