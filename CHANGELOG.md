@@ -62,6 +62,9 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   `X-Content-Type-Options` et `X-Frame-Options`, redirection permanente de HTTP vers HTTPS.
 - Redis n'est plus accessible sans authentification ; `REDIS_PASSWORD` et `DB_PASSWORD` sont
   exigés au lancement de la pile de production, qui refuse de démarrer s'ils sont absents.
+- `browserslist` relevé de 4.28.2 à 4.28.9 (avis GHSA-c83g-rgw3-j3cx et GHSA-73wf-gq98-2v4g :
+  croissance mémoire non bornée et écriture de prototype). Dépendance transitive
+  d'`autoprefixer` ; seul le fichier de verrouillage est modifié.
 
 ---
 
