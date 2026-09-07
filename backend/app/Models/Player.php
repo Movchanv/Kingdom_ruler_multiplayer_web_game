@@ -1,0 +1,99 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Database\Factories\PlayerFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Player extends Model
+{
+    /** @use HasFactory<PlayerFactory> */
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'game_id',
+        'country_id',
+        'current_town_id',
+    ];
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Game, $this>
+     */
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    /**
+     * @return BelongsTo<Country, $this>
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * @return BelongsTo<Town, $this>
+     */
+    public function currentTown(): BelongsTo
+    {
+        return $this->belongsTo(Town::class, 'current_town_id');
+    }
+
+    /**
+     * @return HasMany<ActionLog, $this>
+     */
+    public function actionLogs(): HasMany
+    {
+        return $this->hasMany(ActionLog::class);
+    }
+
+    /**
+     * @return HasMany<PlayerQuest, $this>
+     */
+    public function playerQuests(): HasMany
+    {
+        return $this->hasMany(PlayerQuest::class);
+    }
+
+    /**
+     * @return BelongsToMany<Quest, $this>
+     */
+    public function quests(): BelongsToMany
+    {
+        return $this->belongsToMany(Quest::class, 'player_quests')
+            ->withPivot('status', 'progress', 'completed_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<LawVoteBallot, $this>
+     */
+    public function lawVoteBallots(): HasMany
+    {
+        return $this->hasMany(LawVoteBallot::class);
+    }
+
+    /**
+     * @return HasMany<ChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+}

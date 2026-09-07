@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
@@ -17,6 +18,16 @@ final class AuthController extends Controller
     use ApiResponse;
 
     public function __construct(private readonly AuthService $auth) {}
+
+    public function register(RegisterRequest $request): JsonResponse
+    {
+        ['user' => $user, 'token' => $token] = $this->auth->register($request->toData());
+
+        return $this->success([
+            'user' => new UserResource($user),
+            'token' => $token,
+        ], __('Account created. Please verify your email.'), 201);
+    }
 
     public function login(LoginRequest $request): JsonResponse
     {
