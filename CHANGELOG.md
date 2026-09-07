@@ -66,6 +66,11 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   renouvellement démarrait à la place de l'émission. Ajout également d'une étape `--dry-run`
   préalable, pour valider le circuit sans entamer le quota Let's Encrypt.
 
+- Inscription impossible depuis `www.` : la configuration TLS servait l'application sur les deux
+  noms d'hôte sans redirection. Une page ouverte sur `www.domaine` appelait l'API servie sur
+  `domaine` — deux origines distinctes pour le navigateur — et CORS bloquait la requête, l'API
+  n'autorisant que `FRONTEND_URL`. `www` redirige désormais en 301 vers l'origine canonique.
+
 ### Sécurité
 - Trafic de production chiffré de bout en bout : TLS 1.2/1.3, en-tête HSTS d'un an,
   `X-Content-Type-Options` et `X-Frame-Options`, redirection permanente de HTTP vers HTTPS.
