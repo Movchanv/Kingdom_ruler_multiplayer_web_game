@@ -139,11 +139,57 @@ docker compose exec laravel php artisan migrate:fresh --seed
 
 - **Branches :** `dev` (intégration) → `pre-prod` (recette) → `main` (production). Chaque fonctionnalité est développée sur une branche `feature/*` puis fusionnée par *pull request* validée par la CI.
 - **Intégration continue :** `.github/workflows/ci.yml` exécute à chaque *push* / *pull request* : Pint, Larastan et PHPUnit (backend) + ESLint et build (frontend).
-- **Production :** utiliser `docker-compose.prod.yml` (caches activés, frontend compilé, Nginx en 80/443). Le mot de passe de la base est alors exigé par variable d'environnement (`DB_PASSWORD`).
+- **Production :** utiliser `docker-compose.prod.yml` (caches activés, frontend compilé, Nginx en 80). Le HTTPS s'ajoute avec l'overlay `docker-compose.ssl.yml` (Let's Encrypt + renouvellement automatique).
+
+### Préparation du serveur
 
 ```bash
-# Exemple de déploiement en production
+cp .env.example .env                              # DB_PASSWORD et REDIS_PASSWORD (obligatoires)
+cp backend/.env.production.example backend/.env   # APP_URL, REVERB_APP_SECRET, MAIL_*, ...
+```
+
+Les mots de passe de `.env` (racine) sont injectés dans les conteneurs backend et priment
+sur `backend/.env` : une seule valeur à maintenir pour `DB_PASSWORD` et `REDIS_PASSWORD`.
+`APP_KEY` peut rester vide : l'entrypoint la génère au premier démarrage.
+
+`frontend/.env.production` est lu **au moment du build** de l'image : le domaine doit y être
+renseigné avant `docker compose build`, un changement ultérieur impose de reconstruire le front.
+
+### Déploiement en HTTP
+
+```bash
 docker compose -f docker-compose.prod.yml up -d --build
+curl http://localhost/up      # {"status":"ok","checks":{"database":true,"cache":true}}
+```
+
+### Passage en HTTPS
+
+Le certificat doit exister **avant** que Nginx charge la configuration TLS, sinon il refuse de
+démarrer. L'ordre ci-dessous est donc impératif (le domaine doit déjà pointer sur le serveur) :
+
+```bash
+export DOMAIN=mon-domaine.com CERTBOT_EMAIL=moi@exemple.com
+
+# 1. la pile tourne en HTTP et sert déjà /.well-known/acme-challenge/
+docker compose -f docker-compose.prod.yml up -d
+
+# 2. émission du certificat
+docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml   run --rm certbot certonly --webroot -w /var/www/certbot   -d "$DOMAIN" -d "www.$DOMAIN" --email "$CERTBOT_EMAIL" --agree-tos --no-eff-email
+
+# 3. bascule en TLS + renouvellement automatique toutes les 12 h
+docker compose -f docker-compose.prod.yml -f docker-compose.ssl.yml up -d
+```
+
+### Mise à jour du code
+
+Le volume nommé `backend-vendor` n'est initialisé qu'à sa création : après une modification de
+`composer.lock`, il faut le supprimer pour que les nouvelles dépendances soient prises en compte.
+
+```bash
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml down
+docker volume rm medieval-realm-prod_backend-vendor
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
