@@ -18,6 +18,53 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - Gestion des dépendances : configuration Dependabot (Composer, npm, Docker, GitHub Actions)
   et audits de sécurité (`composer audit`, `npm audit`) intégrés à la chaîne CI.
 - Modèle de fiche de consignation d'anomalie (GitHub Issues).
+- **Mise en ligne** : chiffrement HTTPS de la production via l'overlay `docker-compose.ssl.yml`
+  (Nginx en TLS 1.2/1.3, redirection permanente depuis HTTP) et service `certbot` chargé de
+  l'émission puis du renouvellement automatique des certificats Let's Encrypt toutes les 12 h.
+- Modèle `.env.example` à la racine, regroupant les variables lues par Docker Compose
+  (`DB_PASSWORD`, `REDIS_PASSWORD`, `DOMAIN`, `CERTBOT_EMAIL`).
+- Procédure de déploiement détaillée (README, section 7) : préparation du serveur, mise en
+  ligne en HTTP, bascule vers HTTPS et mise à jour du code.
+- Sondes de disponibilité sur les services `laravel` (port PHP-FPM) et `vue`.
+
+### Modifié
+- Les identifiants de base de données et de cache sont injectés par Docker Compose dans les
+  conteneurs backend, où ils priment sur `backend/.env` : une seule valeur à maintenir pour
+  `DB_PASSWORD` et `REDIS_PASSWORD`, au lieu de deux susceptibles de diverger.
+- Les services `reverb`, `horizon` et `scheduler` attendent désormais que PostgreSQL et Redis
+  soient *sains* avant de démarrer ; ils ne patientaient auparavant que jusqu'au simple
+  lancement du conteneur `laravel` et pouvaient donc démarrer avant que le cache soit prêt.
+- Vue de ville : les bandeaux « S'aventurer » et « Ferme » sont intégrés à l'illustration
+  `town-paris.png`, à l'image des autres lieux déjà légendés sur la carte.
+
+### Corrigé
+- **Pile de production impossible à démarrer** : `docker-compose.prod.yml` n'était pas un
+  YAML valide (`did not find expected key`, ligne 39). Les entrées `- vue` et `- reverb`
+  figuraient dans le bloc `healthcheck` du service `nginx` au lieu de son `depends_on`.
+- Service `scheduler` rejeté par Docker Compose : valeur `restart: alwayss` (coquille).
+- Image `vue` toujours impossible à construire (`node:22-alpin: not found`) : la correction
+  annoncée en 1.0.1 (**#44**) n'avait jamais été appliquée au dépôt.
+- **`APP_KEY` corrompue au premier démarrage** : `laravel`, `reverb`, `horizon` et `scheduler`
+  partagent le même fichier `.env` et exécutaient `key:generate` simultanément, concaténant
+  leurs clés respectives. L'application renvoyait alors HTTP 500 (`Unsupported cipher or
+  incorrect key length`). La génération est désormais sérialisée par un verrou atomique, et
+  la clé obtenue est validée (préfixe `base64:` et longueur de 32 octets) avant démarrage.
+- Redis démarrait sans mot de passe en production alors que la configuration Laravel en
+  exigeait un, provoquant `NOAUTH Authentication required` sur les sessions, le cache et
+  les files d'attente. Le serveur est maintenant protégé par `--requirepass`.
+- `REVERB_APP_KEY` divergeait entre le backend (`__CHANGE_ME__`) et le frontend
+  (`medievalrealmkey`), ce qui empêchait toute connexion temps réel en production.
+- Nginx ne servait pas `/.well-known/acme-challenge/`, rendant impossible la validation de
+  domaine par Let's Encrypt.
+
+### Sécurité
+- Trafic de production chiffré de bout en bout : TLS 1.2/1.3, en-tête HSTS d'un an,
+  `X-Content-Type-Options` et `X-Frame-Options`, redirection permanente de HTTP vers HTTPS.
+- Redis n'est plus accessible sans authentification ; `REDIS_PASSWORD` et `DB_PASSWORD` sont
+  exigés au lancement de la pile de production, qui refuse de démarrer s'ils sont absents.
+- `browserslist` relevé de 4.28.2 à 4.28.9 (avis GHSA-c83g-rgw3-j3cx et GHSA-73wf-gq98-2v4g :
+  croissance mémoire non bornée et écriture de prototype). Dépendance transitive
+  d'`autoprefixer` ; seul le fichier de verrouillage est modifié.
 
 ---
 
