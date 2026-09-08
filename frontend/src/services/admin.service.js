@@ -13,6 +13,14 @@ export const adminService = {
     return api.post('/admin/laws', payload)
   },
 
+  getEvents() {
+    return api.get('/admin/events')
+  },
+
+  createEvent(payload) {
+    return api.post('/admin/events', payload)
+  },
+
   openVote({ gameId, countryId, lawIds, hours }) {
     return api.post('/admin/votes', {
       game_id: gameId,
