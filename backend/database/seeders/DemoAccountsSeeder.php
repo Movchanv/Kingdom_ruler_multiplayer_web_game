@@ -68,7 +68,7 @@ class DemoAccountsSeeder extends Seeder
             ?? Game::query()->where('country_id', $france->id)->orderBy('id')->first();
 
         if ($game === null) {
-            $this->command?->warn('Aucune saison trouvee : lancez SeasonSeeder avant DemoAccountsSeeder.');
+            $this->command->warn('Aucune saison trouvee : lancez SeasonSeeder avant DemoAccountsSeeder.');
 
             return;
         }
