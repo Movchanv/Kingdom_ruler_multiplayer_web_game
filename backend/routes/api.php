@@ -83,6 +83,8 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('admin/users/{user}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
                 Route::post('admin/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
                 Route::post('admin/games/{game}/end', [AdminController::class, 'endSeason'])->name('admin.games.end');
+                Route::get('admin/events', [AdminEventController::class, 'index'])->name('admin.events.index');
+                Route::post('admin/events', [AdminEventController::class, 'store'])->name('admin.events.store');
                 Route::post('admin/events/{event}/trigger', [AdminEventController::class, 'trigger'])->name('admin.events.trigger');
                 Route::post('admin/votes', [AdminVoteController::class, 'open'])->name('admin.votes.open');
             });

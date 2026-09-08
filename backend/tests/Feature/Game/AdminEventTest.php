@@ -49,6 +49,94 @@ final class AdminEventTest extends TestCase
         ]);
     }
 
+    public function test_an_admin_can_create_an_event(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Incendie au grenier',
+            'description' => 'Les reserves partent en fumee.',
+            'type' => 'world',
+            'difficulty' => 'medium',
+            'effects' => ['food' => -25, 'loyalty' => -4],
+            'weight' => 5,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Incendie au grenier')
+            ->assertJsonPath('data.type', 'world')
+            ->assertJsonPath('data.difficulty', 'medium')
+            ->assertJsonPath('data.effects.food', -25)
+            ->assertJsonPath('data.effects.loyalty', -4);
+
+        $this->assertDatabaseHas('events', ['name' => 'Incendie au grenier', 'is_active' => true]);
+    }
+
+    public function test_a_created_event_records_its_author(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Crue de la Seine',
+            'type' => 'world',
+            'difficulty' => 'hard',
+            'effects' => ['wood' => -40],
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('events', ['name' => 'Crue de la Seine', 'created_by' => $admin->id]);
+    }
+
+    public function test_an_unknown_effect_target_is_rejected(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Effet farfelu',
+            'type' => 'world',
+            'difficulty' => 'easy',
+            'effects' => ['licornes' => 10],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('effects.licornes');
+    }
+
+    public function test_a_null_effect_is_rejected(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Sans effet',
+            'type' => 'world',
+            'difficulty' => 'easy',
+            'effects' => ['gold' => 0],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('effects.gold');
+    }
+
+    public function test_a_player_cannot_create_an_event(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Player]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Tentative',
+            'type' => 'world',
+            'difficulty' => 'easy',
+            'effects' => ['gold' => -10],
+        ])->assertForbidden();
+    }
+
+    public function test_an_admin_can_list_the_events(): void
+    {
+        $this->worldEvent();
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->getJson('/api/v1/admin/events')
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'Révolte')
+            ->assertJsonPath('data.0.effects.gold', -30);
+    }
+
     public function test_an_admin_can_trigger_an_event_on_a_town(): void
     {
         ['town' => $town, 'resource' => $resource] = $this->seedTown();
