@@ -17,10 +17,16 @@ final class EventService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function applyToTown(Event $event, Town $town): array
+    public function applyToTown(Event $event, Town $town, float $intensity = 1.0): array
     {
-        /** @var array<string, int> $effects */
-        $effects = $event->effects ?? [];
+        /** @var array<string, int> $rawEffects */
+        $rawEffects = $event->effects ?? [];
+
+        $effects = [];
+
+        foreach ($rawEffects as $key => $delta) {
+            $effects[$key] = (int) round($delta * $intensity);
+        }
 
         $townResources = $town->townResources()->with('resource')->get()
             ->keyBy(fn (TownResource $townResource): string => $townResource->resource->key);
