@@ -41,6 +41,13 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - Vue de ville : les bandeaux « S'aventurer » et « Ferme » sont intégrés à l'illustration
   `town-paris.png`, à l'image des autres lieux déjà légendés sur la carte.
 
+### Modifié
+- Le seeder est découpé en trois : `ReferenceDataSeeder` (pays, titres, ressources, actions,
+  bâtiments, lois, événements, quêtes), `SeasonSeeder` (partie active et villes, indispensables
+  car `GameService::join()` exige une saison active et au moins une ville) et
+  `DemoAccountsSeeder` (comptes de démonstration). `DatabaseSeeder` n'appelle ce dernier que
+  dans les environnements `local` et `testing`.
+
 ### Corrigé
 - **Pile de production impossible à démarrer** : `docker-compose.prod.yml` n'était pas un
   YAML valide (`did not find expected key`, ligne 39). Les entrées `- vue` et `- reverb`
@@ -60,6 +67,15 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   (`medievalrealmkey`), ce qui empêchait toute connexion temps réel en production.
 - Nginx ne servait pas `/.well-known/acme-challenge/`, rendant impossible la validation de
   domaine par Let's Encrypt.
+- Base de données vide après un déploiement : `docker-compose.prod.yml` appliquait les migrations
+  sans jamais peupler les données de référence. Aucun royaume n'apparaissait donc à l'inscription,
+  et `join()` échouait faute de saison active. `php artisan db:seed --force` est désormais exécuté
+  au démarrage du service `laravel` (opération idempotente, fondée sur `firstOrCreate`).
+
+### Sécurité
+- Les comptes de démonstration (`admin@`, `player@`, `researcher@`), dont un administrateur au mot
+  de passe `password`, ne sont plus créés en production : ils étaient jusqu'ici inclus dans le
+  seeder unique, exposant un accès administrateur trivial sur un site public.
 - Documentation de mise en ligne : la commande d'émission du certificat omettait
   `--entrypoint certbot`. Le service `certbot` définissant un `entrypoint`, `docker compose run`
   ne remplaçait que la commande : les arguments `certonly` étaient ignorés et la boucle de
