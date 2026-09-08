@@ -32,6 +32,25 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   page d'accueil, en-tête et pied de page), en cohérence avec le nom de domaine.
 
 ### Modifié
+- Les événements mondiaux ne sont plus rangés dans un palier fixe. Un **score de pression**
+  combine l'ancienneté de la saison (poids 0,35) et **le nombre d'actions jouées depuis le
+  dernier événement** (poids 0,65) : l'activité des joueurs prime sur le calendrier.
+  L'activité est rapportée à une fréquentation soutenue, déduite du quota d'actions journalier,
+  du nombre de joueurs et de l'intervalle courant.
+- Ce score alimente désormais des **probabilités de tirage** plutôt qu'un palier tranché
+  (polynômes de Bernstein de degré 2, dont les trois poids somment toujours à 1) : la
+  probabilité des événements faciles décroît continûment au profit des difficiles à mesure
+  que la pression monte.
+- Un **plancher de 5 %** est garanti à chaque palier : aucun n'est jamais totalement exclu.
+  Une accalmie reste possible sous forte pression, et un coup dur peut survenir dès le
+  premier jour.
+- Les effets sont **multipliés par une intensité** croissante avec la pression, de 1,0 à 2,0 :
+  un événement `food -20` retire 40 unités à pression maximale. Les aventures et les
+  déclenchements manuels par un administrateur conservent l'intensité neutre.
+- Le résultat d'un déclenchement expose `pressure`, `intensity`, `chances` et
+  `actions_since_last_event`, pour rendre le calcul vérifiable.
+
+### Modifié
 - Les identifiants de base de données et de cache sont injectés par Docker Compose dans les
   conteneurs backend, où ils priment sur `backend/.env` : une seule valeur à maintenir pour
   `DB_PASSWORD` et `REDIS_PASSWORD`, au lieu de deux susceptibles de diverger.

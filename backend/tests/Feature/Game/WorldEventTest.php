@@ -6,9 +6,12 @@ namespace Tests\Feature\Game;
 
 use App\Enums\EventDifficulty;
 use App\Enums\EventType;
+use App\Models\Action;
+use App\Models\ActionLog;
 use App\Models\Country;
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\Player;
 use App\Models\Resource;
 use App\Models\Town;
 use App\Models\TownResource;
@@ -54,6 +57,30 @@ final class WorldEventTest extends TestCase
         ]);
     }
 
+    private function logActions(Game $game, int $count, int $players = 1): void
+    {
+        $action = Action::query()->firstOrCreate(
+            ['key' => 'harvest_food'],
+            ['name' => 'Recolter', 'ap_cost' => 1, 'base_xp' => 1, 'is_active' => true],
+        );
+
+        for ($p = 0; $p < $players; $p++) {
+            $player = Player::factory()->create([
+                'game_id' => $game->id,
+                'country_id' => $game->country_id,
+            ]);
+
+            for ($i = 0; $i < $count; $i++) {
+                ActionLog::create([
+                    'game_id' => $game->id,
+                    'player_id' => $player->id,
+                    'action_id' => $action->id,
+                    'xp_gained' => 1,
+                ]);
+            }
+        }
+    }
+
     private function service(): WorldEventService
     {
         return app(WorldEventService::class);
@@ -83,15 +110,104 @@ final class WorldEventTest extends TestCase
         $this->assertNull($this->service()->fire($game));
     }
 
-    public function test_difficulty_escalates_with_season_age(): void
+    public function test_a_quiet_young_season_mostly_draws_easy_events(): void
+    {
+        ['game' => $game] = $this->seedSeason();
+        $this->worldEvent(EventDifficulty::Easy, ['loyalty' => -3], 'Averse');
+
+        $result = $this->service()->fire($game);
+
+        $this->assertNotNull($result);
+        $this->assertSame(0.9, $result['chances']['easy']);
+        $this->assertSame(1.0, $result['intensity']);
+        $this->assertSame(0, $result['actions_since_last_event']);
+    }
+
+    public function test_a_hard_event_stays_possible_even_on_a_quiet_season(): void
+    {
+        ['game' => $game] = $this->seedSeason();
+        $this->worldEvent(EventDifficulty::Easy, ['loyalty' => -3], 'Averse');
+
+        $result = $this->service()->fire($game);
+
+        $this->assertNotNull($result);
+        $this->assertSame(0.05, $result['chances']['hard']);
+        $this->assertSame(1.0, array_sum($result['chances']));
+    }
+
+    public function test_easy_events_stay_possible_under_maximum_pressure(): void
     {
         ['game' => $game] = $this->seedSeason(ageDays: 6);
+        $this->logActions($game, count: 40);
         $this->worldEvent(EventDifficulty::Hard, ['loyalty' => -10], 'Révolte');
 
         $result = $this->service()->fire($game);
 
         $this->assertNotNull($result);
-        $this->assertSame('hard', $result['difficulty']);
+        $this->assertSame(0.05, $result['chances']['easy']);
+        $this->assertSame(0.05, $result['chances']['medium']);
+        $this->assertSame(0.9, $result['chances']['hard']);
+        $this->assertSame(1.0, array_sum($result['chances']));
+    }
+
+    public function test_season_age_alone_keeps_easy_events_more_likely_than_hard(): void
+    {
+        ['game' => $game] = $this->seedSeason(ageDays: 6);
+        $this->worldEvent(EventDifficulty::Easy, ['loyalty' => -3], 'Averse');
+
+        $result = $this->service()->fire($game);
+
+        $this->assertNotNull($result);
+        $this->assertGreaterThan($result['chances']['hard'], $result['chances']['easy']);
+    }
+
+    public function test_player_activity_shifts_the_odds_toward_hard_events(): void
+    {
+        ['game' => $game] = $this->seedSeason();
+        $this->logActions($game, count: 20);
+        $this->worldEvent(EventDifficulty::Easy, ['loyalty' => -3], 'Averse');
+
+        $result = $this->service()->fire($game);
+
+        $this->assertNotNull($result);
+        $this->assertSame(20, $result['actions_since_last_event']);
+        $this->assertGreaterThan($result['chances']['easy'], $result['chances']['hard']);
+    }
+
+    public function test_effects_are_amplified_by_pressure(): void
+    {
+        ['game' => $game, 'town' => $town] = $this->seedSeason(ageDays: 6);
+        $this->logActions($game, count: 40);
+
+        $food = Resource::factory()->create(['key' => 'food', 'name' => 'Nourriture']);
+        TownResource::create(['town_id' => $town->id, 'resource_id' => $food->id, 'amount' => 200, 'capacity' => 1000]);
+
+        $this->worldEvent(EventDifficulty::Medium, ['food' => -20], 'Disette');
+
+        $result = $this->service()->fire($game);
+
+        $this->assertNotNull($result);
+        $this->assertSame(2.0, $result['intensity']);
+
+        $applied = collect($result['effects'])->firstWhere('key', 'food');
+        $this->assertNotNull($applied);
+        $this->assertSame(-40, $applied['delta']);
+    }
+
+    public function test_only_actions_since_the_last_event_are_counted(): void
+    {
+        ['game' => $game] = $this->seedSeason();
+        $this->logActions($game, count: 20);
+        $game->forceFill(['last_world_event_at' => now()->subHours(13)])->save();
+
+        ActionLog::query()->update(['created_at' => now()->subHours(20)]);
+
+        $this->worldEvent(EventDifficulty::Easy, ['loyalty' => -3], 'Averse');
+
+        $result = $this->service()->fire($game->refresh());
+
+        $this->assertNotNull($result);
+        $this->assertSame(0, $result['actions_since_last_event']);
     }
 
     public function test_the_tick_command_fires_due_events_on_active_seasons(): void
