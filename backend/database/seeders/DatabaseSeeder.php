@@ -10,6 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(DemoGameSeeder::class);
+        $this->call(ReferenceDataSeeder::class);
+        $this->call(SeasonSeeder::class);
+
+        if (app()->environment(['local', 'testing'])) {
+            $this->call(DemoAccountsSeeder::class);
+        }
     }
 }
