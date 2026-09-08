@@ -31,6 +31,13 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - L'application s'intitule désormais « Les Seigneuries » dans l'interface (titre de l'onglet,
   page d'accueil, en-tête et pied de page), en cohérence avec le nom de domaine.
 
+### Ajouté
+- **Création d'événements depuis le panneau d'administration** : `GET /api/v1/admin/events` liste
+  le catalogue et `POST /api/v1/admin/events` crée un événement (nom, description, type,
+  difficulté, un ou deux effets). Jusqu'ici un administrateur ne pouvait que déclencher un
+  événement existant, et seules les lois étaient créables. La cible de chaque effet est validée
+  contre une liste fermée (ressources du jeu, loyauté, action offerte) et l'auteur est enregistré.
+
 ### Modifié
 - Les événements mondiaux ne sont plus rangés dans un palier fixe. Un **score de pression**
   combine l'ancienneté de la saison (poids 0,35) et **le nombre d'actions jouées depuis le

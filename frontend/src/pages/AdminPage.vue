@@ -23,6 +23,43 @@ const launching = ref(false)
 const lawForm = ref({ name: '', description: '', bonus_key: 'gold_bonus_pct', bonus_value: 10 })
 const creating = ref(false)
 
+const events = ref([])
+const emptyEventForm = () => ({
+  name: '',
+  description: '',
+  type: 'world',
+  difficulty: 'medium',
+  effect_key_1: 'gold',
+  effect_value_1: -20,
+  effect_key_2: '',
+  effect_value_2: -5,
+})
+const eventForm = ref(emptyEventForm())
+const creatingEvent = ref(false)
+
+const EVENT_TYPE_OPTIONS = [
+  { value: 'world', label: 'Monde (automatique)' },
+  { value: 'adventure', label: 'Aventure' },
+]
+
+const EVENT_DIFFICULTY_OPTIONS = [
+  { value: 'easy', label: 'Facile' },
+  { value: 'medium', label: 'Moyenne' },
+  { value: 'hard', label: 'Difficile' },
+]
+
+const EFFECT_OPTIONS = [
+  { value: 'gold', label: 'Or' },
+  { value: 'food', label: 'Nourriture' },
+  { value: 'wood', label: 'Bois' },
+  { value: 'stone', label: 'Pierre' },
+  { value: 'soldiers', label: 'Soldats' },
+  { value: 'iron', label: 'Fer' },
+  { value: 'coal', label: 'Charbon' },
+  { value: 'loyalty', label: 'Loyauté' },
+  { value: 'free_action', label: 'Action offerte' },
+]
+
 const BONUS_OPTIONS = [
   { value: 'gold_bonus_pct', label: "Production d'or (%)" },
   { value: 'food_bonus_pct', label: 'Production de nourriture (%)' },
@@ -51,7 +88,7 @@ onMounted(async () => {
       return
     }
 
-    await Promise.all([loadGames(), loadLaws(), loadMonitoring(), loadReports()])
+    await Promise.all([loadGames(), loadLaws(), loadEvents(), loadMonitoring(), loadReports()])
   } finally {
     loading.value = false
   }
@@ -144,6 +181,47 @@ async function createLaw() {
   } finally {
     creating.value = false
   }
+}
+
+async function loadEvents() {
+  const { data } = await adminService.getEvents()
+  events.value = data.data
+}
+
+async function createEvent() {
+  const form = eventForm.value
+  const effects = { [form.effect_key_1]: Number(form.effect_value_1) }
+
+  if (form.effect_key_2 && form.effect_key_2 !== form.effect_key_1) {
+    effects[form.effect_key_2] = Number(form.effect_value_2)
+  }
+
+  creatingEvent.value = true
+  try {
+    await adminService.createEvent({
+      name: form.name,
+      description: form.description || null,
+      type: form.type,
+      difficulty: form.difficulty,
+      effects,
+    })
+    toast.success(`Événement « ${form.name} » créé.`)
+    eventForm.value = emptyEventForm()
+    await loadEvents()
+  } catch {
+    // Rien
+  } finally {
+    creatingEvent.value = false
+  }
+}
+
+function eventEffectsText(event) {
+  return Object.entries(event.effects ?? {})
+    .map(([key, value]) => {
+      const label = EFFECT_OPTIONS.find((option) => option.value === key)?.label ?? key
+      return `${label} ${value > 0 ? '+' : ''}${value}`
+    })
+    .join(' · ')
 }
 
 function lawBonusText(law) {
@@ -291,6 +369,147 @@ function lawBonusText(law) {
               {{ creating ? 'Rédaction…' : 'Promulguer la loi' }}
             </button>
           </form>
+        </section>
+
+        <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
+          <h2 class="font-heading text-lg text-gold-400">⚡ Créer un événement</h2>
+          <p class="mt-1 text-xs text-parchment-100/60">
+            Les événements de type « Monde » sont tirés automatiquement selon la pression de la
+            saison ; leurs effets sont alors amplifiés jusqu'au double.
+          </p>
+
+          <form class="mt-4 grid gap-3 sm:grid-cols-2" @submit.prevent="createEvent">
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Nom</span>
+              <input
+                v-model="eventForm.name"
+                type="text"
+                required
+                minlength="3"
+                maxlength="100"
+                placeholder="Ex. : Incendie au grenier"
+                class="input mt-1"
+              />
+            </label>
+
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                Description (optionnelle)
+              </span>
+              <input
+                v-model="eventForm.description"
+                type="text"
+                maxlength="255"
+                placeholder="Ce que subit la ville…"
+                class="input mt-1"
+              />
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Type</span>
+              <select v-model="eventForm.type" class="input mt-1">
+                <option v-for="option in EVENT_TYPE_OPTIONS" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Difficulté</span>
+              <select v-model="eventForm.difficulty" class="input mt-1">
+                <option
+                  v-for="option in EVENT_DIFFICULTY_OPTIONS"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Effet</span>
+              <select v-model="eventForm.effect_key_1" class="input mt-1">
+                <option v-for="option in EFFECT_OPTIONS" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                Valeur (négative = perte)
+              </span>
+              <input
+                v-model.number="eventForm.effect_value_1"
+                type="number"
+                min="-500"
+                max="500"
+                required
+                class="input mt-1"
+              />
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                Second effet (optionnel)
+              </span>
+              <select v-model="eventForm.effect_key_2" class="input mt-1">
+                <option value="">Aucun</option>
+                <option
+                  v-for="option in EFFECT_OPTIONS"
+                  :key="option.value"
+                  :value="option.value"
+                  :disabled="option.value === eventForm.effect_key_1"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="block">
+              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Valeur</span>
+              <input
+                v-model.number="eventForm.effect_value_2"
+                type="number"
+                min="-500"
+                max="500"
+                :disabled="!eventForm.effect_key_2"
+                class="input mt-1"
+              />
+            </label>
+
+            <button
+              type="submit"
+              class="btn-gold sm:col-span-2"
+              :disabled="
+                creatingEvent ||
+                eventForm.name.trim().length < 3 ||
+                Number(eventForm.effect_value_1) === 0
+              "
+            >
+              {{ creatingEvent ? 'Création…' : "Créer l'événement" }}
+            </button>
+          </form>
+
+          <ul v-if="events.length" class="mt-5 space-y-2">
+            <li
+              v-for="event in events"
+              :key="event.id"
+              class="rounded border border-iron-700 bg-iron-900/40 px-3 py-2 text-sm"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-parchment-100">{{ event.name }}</span>
+                <span class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70">
+                  {{ event.type === 'world' ? 'Monde' : 'Aventure' }}
+                </span>
+                <span class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70">
+                  {{ event.difficulty }}
+                </span>
+              </div>
+              <p class="mt-1 text-xs text-parchment-100/60">{{ eventEffectsText(event) }}</p>
+            </li>
+          </ul>
         </section>
 
         <section v-if="monitoring" class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
