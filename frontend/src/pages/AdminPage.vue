@@ -36,11 +36,20 @@ const emptyEventForm = () => ({
 })
 const eventForm = ref(emptyEventForm())
 const creatingEvent = ref(false)
+const triggerTownId = ref(null)
+const triggeringEventId = ref(null)
 
 const EVENT_TYPE_OPTIONS = [
-  { value: 'world', label: 'Monde (automatique)' },
+  { value: 'world', label: 'Monde (tirage automatique)' },
   { value: 'adventure', label: 'Aventure' },
+  { value: 'manual', label: 'Manuel (admin uniquement)' },
 ]
+
+const EVENT_TYPE_LABELS = {
+  world: 'Monde',
+  adventure: 'Aventure',
+  manual: 'Manuel',
+}
 
 const EVENT_DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Facile' },
@@ -212,6 +221,32 @@ async function createEvent() {
     // Rien
   } finally {
     creatingEvent.value = false
+  }
+}
+
+const townChoices = computed(() =>
+  games.value.flatMap((game) =>
+    (game.towns ?? []).map((town) => ({ id: town.id, label: `${town.name} — ${game.name}` })),
+  ),
+)
+
+async function triggerEvent(event) {
+  if (!triggerTownId.value) {
+    toast.error('Choisissez une ville cible.')
+    return
+  }
+
+  triggeringEventId.value = event.id
+  try {
+    const { data } = await adminService.triggerEvent(event.id, triggerTownId.value)
+    const effects = (data.data.effects ?? [])
+      .map((effect) => `${effect.key} ${effect.delta > 0 ? '+' : ''}${effect.delta}`)
+      .join(' · ')
+    toast.success(`« ${event.name} » déclenché${effects ? ` : ${effects}` : ''}.`)
+  } catch {
+    // Rien
+  } finally {
+    triggeringEventId.value = null
   }
 }
 
@@ -492,24 +527,61 @@ function lawBonusText(law) {
             </button>
           </form>
 
-          <ul v-if="events.length" class="mt-5 space-y-2">
-            <li
-              v-for="event in events"
-              :key="event.id"
-              class="rounded border border-iron-700 bg-iron-900/40 px-3 py-2 text-sm"
-            >
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-semibold text-parchment-100">{{ event.name }}</span>
-                <span class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70">
-                  {{ event.type === 'world' ? 'Monde' : 'Aventure' }}
+          <div v-if="events.length" class="mt-6 border-t border-iron-700 pt-4">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <h3 class="font-heading text-base text-gold-400">Catalogue</h3>
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Ville ciblée par un déclenchement
                 </span>
-                <span class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70">
-                  {{ event.difficulty }}
-                </span>
-              </div>
-              <p class="mt-1 text-xs text-parchment-100/60">{{ eventEffectsText(event) }}</p>
-            </li>
-          </ul>
+                <select v-model.number="triggerTownId" class="input mt-1">
+                  <option :value="null">Choisir une ville…</option>
+                  <option v-for="town in townChoices" :key="town.id" :value="town.id">
+                    {{ town.label }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <ul class="mt-4 space-y-2">
+              <li
+                v-for="event in events"
+                :key="event.id"
+                class="rounded border border-iron-700 bg-iron-900/40 px-3 py-2 text-sm"
+              >
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-semibold text-parchment-100">{{ event.name }}</span>
+                    <span
+                      class="rounded-full border px-2 py-0.5 text-xs"
+                      :class="
+                        event.type === 'manual'
+                          ? 'border-gold-400/50 bg-gold-400/10 text-gold-300'
+                          : 'border-iron-600 text-parchment-100/70'
+                      "
+                    >
+                      {{ EVENT_TYPE_LABELS[event.type] ?? event.type }}
+                    </span>
+                    <span
+                      class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70"
+                    >
+                      {{ event.difficulty }}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn-ghost text-xs"
+                    :disabled="!triggerTownId || triggeringEventId === event.id"
+                    @click="triggerEvent(event)"
+                  >
+                    {{ triggeringEventId === event.id ? 'Déclenchement…' : '⚡ Déclencher' }}
+                  </button>
+                </div>
+                <p class="mt-1 text-xs text-parchment-100/60">{{ eventEffectsText(event) }}</p>
+              </li>
+            </ul>
+          </div>
         </section>
 
         <section v-if="monitoring" class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">

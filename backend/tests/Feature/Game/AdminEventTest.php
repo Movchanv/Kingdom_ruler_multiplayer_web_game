@@ -14,6 +14,7 @@ use App\Models\Resource;
 use App\Models\Town;
 use App\Models\TownResource;
 use App\Models\User;
+use App\Services\WorldEventService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -135,6 +136,60 @@ final class AdminEventTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.0.name', 'Révolte')
             ->assertJsonPath('data.0.effects.gold', -30);
+    }
+
+    public function test_an_admin_can_create_a_manual_only_event(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Edit royal',
+            'type' => 'manual',
+            'difficulty' => 'medium',
+            'effects' => ['gold' => 100],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.type', 'manual');
+
+        $this->assertDatabaseHas('events', ['name' => 'Edit royal', 'type' => 'manual']);
+    }
+
+    public function test_a_manual_event_is_never_drawn_automatically(): void
+    {
+        ['town' => $town] = $this->seedTown();
+
+        // Seul evenement du catalogue, mais reserve au declenchement manuel.
+        Event::create([
+            'type' => EventType::Manual,
+            'difficulty' => EventDifficulty::Easy,
+            'name' => 'Edit royal',
+            'effects' => ['gold' => 100],
+            'is_active' => true,
+        ]);
+
+        $fired = app(WorldEventService::class)->fire($town->game);
+
+        $this->assertNull($fired);
+        $this->assertNull($town->game->refresh()->last_world_event_at);
+    }
+
+    public function test_a_manual_event_can_still_be_triggered_by_an_admin(): void
+    {
+        ['town' => $town, 'resource' => $resource] = $this->seedTown();
+        $event = Event::create([
+            'type' => EventType::Manual,
+            'difficulty' => EventDifficulty::Easy,
+            'name' => 'Don du roi',
+            'effects' => ['gold' => 50],
+            'is_active' => true,
+        ]);
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson("/api/v1/admin/events/{$event->id}/trigger", ['town_id' => $town->id])
+            ->assertOk()
+            ->assertJsonPath('data.effects.0.key', 'gold');
+
+        $this->assertSame(150, $resource->refresh()->amount);
     }
 
     public function test_an_admin_can_trigger_an_event_on_a_town(): void
