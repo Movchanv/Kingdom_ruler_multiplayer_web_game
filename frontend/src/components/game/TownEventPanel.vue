@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { resourceIcon } from '@/config/townBuildings'
+import { resourceIcon, resourceLabel } from '@/config/townBuildings'
 
 const props = defineProps({
   pendingEvents: { type: Array, default: () => [] },
@@ -62,10 +62,12 @@ function requirementIsMet(event) {
   )
 }
 
+const resourceNames = computed(() =>
+  Object.fromEntries(props.resources.map((resource) => [resource.key, resource.name])),
+)
+
 function label(key) {
-  if (key === 'loyalty') return 'Loyauté'
-  if (key === 'free_action') return 'Action offerte'
-  return key
+  return resourceNames.value[key] ?? resourceLabel(key)
 }
 
 function icon(key) {
