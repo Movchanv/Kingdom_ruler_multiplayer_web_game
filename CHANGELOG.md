@@ -38,6 +38,14 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   événement existant, et seules les lois étaient créables. La cible de chaque effet est validée
   contre une liste fermée (ressources du jeu, loyauté, action offerte) et l'auteur est enregistré.
 
+### Ajouté
+- Nouveau type d'événement **« Manuel »**, réservé au déclenchement par un administrateur. Les
+  deux chemins automatiques tirant explicitement leur type (`Adventure` pour les aventures,
+  `World` pour l'ordonnanceur), un événement manuel n'est jamais sélectionné tout seul.
+- **Déclenchement depuis le panneau d'administration** : le catalogue affiche un bouton par
+  événement et un sélecteur de ville cible. `GET /api/v1/admin/games` expose désormais les villes
+  vivantes de chaque saison active pour alimenter ce choix.
+
 ### Modifié
 - Les événements mondiaux ne sont plus rangés dans un palier fixe. Un **score de pression**
   combine l'ancienneté de la saison (poids 0,35) et **le nombre d'actions jouées depuis le

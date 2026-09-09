@@ -48,7 +48,7 @@ final class AdminController extends Controller
     {
         $games = Game::query()
             ->where('status', GameStatus::Active)
-            ->with('country')
+            ->with(['country', 'towns'])
             ->get()
             ->map(fn (Game $game): array => [
                 'id' => $game->id,
@@ -58,6 +58,12 @@ final class AdminController extends Controller
                     'name' => $game->country?->name,
                 ],
                 'vote_hours' => (int) ($game->config['vote_hours'] ?? 12),
+                // Cibles possibles pour le declenchement manuel d'un evenement.
+                'towns' => $game->towns
+                    ->whereNull('destroyed_at')
+                    ->map(fn (Town $town): array => ['id' => $town->id, 'name' => $town->name])
+                    ->values()
+                    ->all(),
             ])
             ->all();
 
