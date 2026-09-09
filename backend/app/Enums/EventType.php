@@ -8,4 +8,6 @@ enum EventType: string
 {
     case Adventure = 'adventure';
     case World = 'world';
+
+    case Manual = 'manual';
 }
