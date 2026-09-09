@@ -11,7 +11,7 @@ use App\Http\Requests\Admin\StoreEventRequest;
 use App\Http\Requests\Game\TriggerEventRequest;
 use App\Models\Event;
 use App\Models\Town;
-use App\Services\EventService;
+use App\Services\TownEventService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -19,7 +19,7 @@ final class AdminEventController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private readonly EventService $events) {}
+    public function __construct(private readonly TownEventService $townEvents) {}
 
     public function index(): JsonResponse
     {
@@ -36,21 +36,37 @@ final class AdminEventController extends Controller
 
     public function store(StoreEventRequest $request): JsonResponse
     {
-        /** @var array<string, int> $effects */
-        $effects = $request->array('effects');
-
         $event = Event::create([
             'type' => $request->enum('type', EventType::class),
             'difficulty' => $request->enum('difficulty', EventDifficulty::class),
             'name' => (string) $request->string('name'),
             'description' => $request->input('description'),
-            'effects' => array_map(static fn ($value): int => (int) $value, $effects),
+            'icon' => $request->input('icon'),
+            'effects' => $this->intMap($request->array('effects')),
+            'requirement' => $this->intMap($request->array('requirement')),
+            'success_effects' => $this->intMap($request->array('success_effects')),
+            'failure_effects' => $this->intMap($request->array('failure_effects')),
+            'delay_min_minutes' => $request->filled('delay_min_minutes') ? $request->integer('delay_min_minutes') : null,
+            'delay_max_minutes' => $request->filled('delay_max_minutes') ? $request->integer('delay_max_minutes') : null,
             'weight' => $request->integer('weight') ?: null,
             'is_active' => true,
             'created_by' => $request->user()?->id,
         ]);
 
         return $this->success($this->present($event), __('Event created.'), 201);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, int>|null
+     */
+    private function intMap(array $values): ?array
+    {
+        if ($values === []) {
+            return null;
+        }
+
+        return array_map(static fn ($value): int => (int) $value, $values);
     }
 
     /**
@@ -64,7 +80,13 @@ final class AdminEventController extends Controller
             'difficulty' => $event->difficulty?->value,
             'name' => $event->name,
             'description' => $event->description,
+            'icon' => $event->icon,
             'effects' => $event->effects ?? [],
+            'requirement' => $event->requirement ?? [],
+            'success_effects' => $event->success_effects ?? [],
+            'failure_effects' => $event->failure_effects ?? [],
+            'delay_min_minutes' => $event->delay_min_minutes,
+            'delay_max_minutes' => $event->delay_max_minutes,
             'weight' => $event->weight,
         ];
     }
@@ -73,12 +95,19 @@ final class AdminEventController extends Controller
     {
         $town = Town::query()->findOrFail($request->integer('town_id'));
 
-        $applied = $this->events->applyToTown($event, $town);
+        $townEvent = $this->townEvents->schedule(
+            $event,
+            $town,
+            triggeredBy: $request->user(),
+            delayMinutes: $request->filled('delay_minutes') ? $request->integer('delay_minutes') : null,
+        );
 
         return $this->success([
             'event' => $event->name,
             'town_id' => $town->id,
-            'effects' => $applied,
-        ], __('Event triggered.'));
+            'town_event_id' => $townEvent->id,
+            'resolves_at' => $townEvent->resolves_at->toIso8601String(),
+            'requirement' => $townEvent->requirement ?? [],
+        ], __('Event scheduled.'));
     }
 }
