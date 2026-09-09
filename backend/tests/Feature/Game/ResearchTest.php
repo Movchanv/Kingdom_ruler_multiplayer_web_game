@@ -72,7 +72,7 @@ final class ResearchTest extends TestCase
 
         $this->getJson('/api/v1/research/actions')
             ->assertOk()
-            ->assertJsonPath('data.0.action', 'mine_gold')
+            ->assertJsonPath('data.0.action', 'Miner')
             ->assertJsonPath('data.0.count', 3)
             ->assertJsonPath('data.0.xp', 15);
     }
@@ -99,7 +99,7 @@ final class ResearchTest extends TestCase
         $response->assertOk()
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('attachment', (string) $response->headers->get('Content-Disposition'));
-        $this->assertStringContainsString('mine_gold', $response->getContent());
+        $this->assertStringContainsString('Miner', $response->getContent());
     }
 
     public function test_season_rankings_can_be_downloaded_as_csv_without_identities(): void
