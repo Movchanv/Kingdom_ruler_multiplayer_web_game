@@ -102,9 +102,6 @@ class ReferenceDataSeeder extends Seeder
 
     private function seedBuildings(): void
     {
-        // Les 6 bâtiments visibles sur la carte de ville : chaque bâtiment de
-        // production booste la ressource qu'il incarne ; l'hôtel de ville
-        // entretient la loyauté (et héberge les votes de lois côté interface).
         $buildings = [
             ['town_hall', 'Hôtel de ville', 'civic', ['loyalty_per_day' => 2], ['wood' => 50, 'stone' => 50]],
             ['farm', 'Ferme', 'production', ['food_bonus_pct' => 10], ['wood' => 50, 'stone' => 10]],
@@ -150,27 +147,112 @@ class ReferenceDataSeeder extends Seeder
 
     private function seedEvents(): void
     {
-        $events = [
-            [EventType::Adventure, 'Trésor caché', 'Vous découvrez un coffre oublié.', ['gold' => 50], EventDifficulty::Easy, 40],
-            [EventType::Adventure, 'Bonne récolte', 'Un fermier reconnaissant offre des vivres.', ['food' => 30], EventDifficulty::Easy, 30],
-            [EventType::Adventure, 'Embuscade', 'Des bandits attaquent le convoi.', ['soldiers' => -2, 'loyalty' => -2], EventDifficulty::Medium, 20],
-            [EventType::Adventure, 'Peste', 'Une épidémie frappe la ville.', ['loyalty' => -5, 'food' => -20], EventDifficulty::Hard, 10],
-            [EventType::Adventure, 'Journée bénie', 'Le seigneur accorde une action supplémentaire.', ['free_action' => 1], EventDifficulty::Easy, 5],
-
-            [EventType::World, 'Raid de pillards', 'Des pillards ravagent les abords de la ville.', ['gold' => -30, 'loyalty' => -3], EventDifficulty::Easy, 30],
-            [EventType::World, 'Disette', 'Les réserves de nourriture s\'épuisent.', ['food' => -25, 'loyalty' => -5], EventDifficulty::Medium, 20],
-            [EventType::World, 'Révolte populaire', 'Le peuple se soulève contre l\'autorité.', ['loyalty' => -10, 'soldiers' => -3], EventDifficulty::Hard, 10],
+        $adventures = [
+            ['Trésor caché', 'Vous découvrez un coffre oublié.', '💰', ['gold' => 50], EventDifficulty::Easy, 40],
+            ['Bonne récolte', 'Un fermier reconnaissant offre des vivres.', '🌾', ['food' => 30], EventDifficulty::Easy, 30],
+            ['Embuscade', 'Des bandits attaquent le convoi.', '🗡️', ['soldiers' => -2, 'loyalty' => -2], EventDifficulty::Medium, 20],
+            ['Peste', 'Une épidémie frappe la ville.', '☠️', ['loyalty' => -5, 'food' => -20], EventDifficulty::Hard, 10],
+            ['Journée bénie', 'Le seigneur accorde une action supplémentaire.', '✨', ['free_action' => 1], EventDifficulty::Easy, 5],
         ];
 
-        foreach ($events as [$type, $name, $description, $effects, $difficulty, $weight]) {
+        foreach ($adventures as [$name, $description, $icon, $effects, $difficulty, $weight]) {
             Event::firstOrCreate(
                 ['name' => $name],
                 [
-                    'type' => $type,
+                    'type' => EventType::Adventure,
                     'difficulty' => $difficulty,
                     'description' => $description,
+                    'icon' => $icon,
                     'effects' => $effects,
                     'weight' => $weight,
+                    'is_active' => true,
+                ],
+            );
+        }
+
+        $threats = [
+            [
+                'name' => 'Raid de pillards',
+                'description' => 'Des pillards rôdent aux abords. Tenez la garde prête.',
+                'icon' => '🏴',
+                'difficulty' => EventDifficulty::Easy,
+                'requirement' => ['soldiers' => 3],
+                'success' => ['soldiers' => -1, 'gold' => 15],
+                'failure' => ['gold' => -30, 'loyalty' => -3],
+                'delay' => [30, 90],
+                'weight' => 30,
+            ],
+            [
+                'name' => 'Attaque des barbares',
+                'description' => 'Une horde approche. Sans défense suffisante, la ville sera pillée.',
+                'icon' => '🪓',
+                'difficulty' => EventDifficulty::Medium,
+                'requirement' => ['soldiers' => 8],
+                'success' => ['soldiers' => -5, 'gold' => 40],
+                'failure' => ['soldiers' => -8, 'gold' => -60, 'food' => -30, 'loyalty' => -5],
+                'delay' => [60, 180],
+                'weight' => 25,
+            ],
+            [
+                'name' => 'Disette',
+                'description' => 'Les greniers se vident. Constituez des réserves avant les grands froids.',
+                'icon' => '🌵',
+                'difficulty' => EventDifficulty::Medium,
+                'requirement' => ['food' => 80],
+                'success' => ['food' => -40, 'loyalty' => 3],
+                'failure' => ['food' => -25, 'loyalty' => -8],
+                'delay' => [90, 240],
+                'weight' => 20,
+            ],
+            [
+                'name' => 'Incendie au quartier des artisans',
+                'description' => 'Le feu couve. Il faudra du bois et de la pierre pour reconstruire.',
+                'icon' => '🔥',
+                'difficulty' => EventDifficulty::Medium,
+                'requirement' => ['stone' => 40, 'wood' => 40],
+                'success' => ['stone' => -20, 'wood' => -20, 'loyalty' => 4],
+                'failure' => ['wood' => -60, 'stone' => -30, 'loyalty' => -6],
+                'delay' => [60, 150],
+                'weight' => 20,
+            ],
+            [
+                'name' => 'Révolte populaire',
+                'description' => 'La colère monte. Seule une garde nombreuse contiendra la foule.',
+                'icon' => '⚒️',
+                'difficulty' => EventDifficulty::Hard,
+                'requirement' => ['soldiers' => 15],
+                'success' => ['soldiers' => -6, 'loyalty' => 10],
+                'failure' => ['loyalty' => -15, 'soldiers' => -5, 'gold' => -50],
+                'delay' => [120, 300],
+                'weight' => 12,
+            ],
+            [
+                'name' => 'Siège hivernal',
+                'description' => 'Une armée campe devant les murs. Vivres et soldats seront décisifs.',
+                'icon' => '🛡️',
+                'difficulty' => EventDifficulty::Hard,
+                'requirement' => ['soldiers' => 20, 'food' => 120],
+                'success' => ['soldiers' => -10, 'food' => -60, 'gold' => 120],
+                'failure' => ['soldiers' => -15, 'food' => -80, 'gold' => -100, 'loyalty' => -12],
+                'delay' => [180, 360],
+                'weight' => 8,
+            ],
+        ];
+
+        foreach ($threats as $threat) {
+            Event::firstOrCreate(
+                ['name' => $threat['name']],
+                [
+                    'type' => EventType::World,
+                    'difficulty' => $threat['difficulty'],
+                    'description' => $threat['description'],
+                    'icon' => $threat['icon'],
+                    'requirement' => $threat['requirement'],
+                    'success_effects' => $threat['success'],
+                    'failure_effects' => $threat['failure'],
+                    'delay_min_minutes' => $threat['delay'][0],
+                    'delay_max_minutes' => $threat['delay'][1],
+                    'weight' => $threat['weight'],
                     'is_active' => true,
                 ],
             );

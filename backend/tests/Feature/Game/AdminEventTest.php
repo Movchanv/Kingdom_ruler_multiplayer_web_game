@@ -12,8 +12,10 @@ use App\Models\Event;
 use App\Models\Game;
 use App\Models\Resource;
 use App\Models\Town;
+use App\Models\TownEvent;
 use App\Models\TownResource;
 use App\Models\User;
+use App\Services\TownEventService;
 use App\Services\WorldEventService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -45,6 +47,7 @@ final class AdminEventTest extends TestCase
             'name' => 'Révolte',
             'description' => 'Le peuple gronde.',
             'effects' => ['gold' => -30],
+            'failure_effects' => ['gold' => -30],
             'weight' => 10,
             'is_active' => true,
         ]);
@@ -70,6 +73,60 @@ final class AdminEventTest extends TestCase
             ->assertJsonPath('data.effects.loyalty', -4);
 
         $this->assertDatabaseHas('events', ['name' => 'Incendie au grenier', 'is_active' => true]);
+    }
+
+    public function test_an_admin_can_create_an_announced_threat(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Attaque des barbares',
+            'description' => 'Une horde approche.',
+            'icon' => '🪓',
+            'type' => 'world',
+            'difficulty' => 'medium',
+            'requirement' => ['soldiers' => 8],
+            'success_effects' => ['soldiers' => -5, 'gold' => 40],
+            'failure_effects' => ['soldiers' => -8, 'gold' => -60],
+            'delay_min_minutes' => 60,
+            'delay_max_minutes' => 180,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.requirement.soldiers', 8)
+            ->assertJsonPath('data.success_effects.gold', 40)
+            ->assertJsonPath('data.failure_effects.soldiers', -8)
+            ->assertJsonPath('data.delay_min_minutes', 60)
+            ->assertJsonPath('data.icon', '🪓');
+    }
+
+    public function test_an_event_without_any_consequence_is_rejected(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Evenement creux',
+            'type' => 'world',
+            'difficulty' => 'easy',
+            'requirement' => ['soldiers' => 5],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('effects');
+    }
+
+    public function test_a_maximum_delay_below_the_minimum_is_rejected(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson('/api/v1/admin/events', [
+            'name' => 'Delai incoherent',
+            'type' => 'world',
+            'difficulty' => 'easy',
+            'failure_effects' => ['gold' => -10],
+            'delay_min_minutes' => 120,
+            'delay_max_minutes' => 30,
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('delay_max_minutes');
     }
 
     public function test_a_created_event_records_its_author(): void
@@ -158,7 +215,6 @@ final class AdminEventTest extends TestCase
     {
         ['town' => $town] = $this->seedTown();
 
-        // Seul evenement du catalogue, mais reserve au declenchement manuel.
         Event::create([
             'type' => EventType::Manual,
             'difficulty' => EventDifficulty::Easy,
@@ -181,15 +237,20 @@ final class AdminEventTest extends TestCase
             'difficulty' => EventDifficulty::Easy,
             'name' => 'Don du roi',
             'effects' => ['gold' => 50],
+            'success_effects' => ['gold' => 50],
             'is_active' => true,
         ]);
         Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-        $this->postJson("/api/v1/admin/events/{$event->id}/trigger", ['town_id' => $town->id])
-            ->assertOk()
-            ->assertJsonPath('data.effects.0.key', 'gold');
+        $this->postJson("/api/v1/admin/events/{$event->id}/trigger", [
+            'town_id' => $town->id,
+            'delay_minutes' => 0,
+        ])->assertOk();
+
+        app(TownEventService::class)->resolveDue();
 
         $this->assertSame(150, $resource->refresh()->amount);
+        $this->assertDatabaseHas('town_events', ['town_id' => $town->id, 'status' => 'succeeded']);
     }
 
     public function test_an_admin_can_trigger_an_event_on_a_town(): void
@@ -200,10 +261,25 @@ final class AdminEventTest extends TestCase
 
         $this->postJson("/api/v1/admin/events/{$event->id}/trigger", ['town_id' => $town->id])
             ->assertOk()
-            ->assertJsonPath('data.effects.0.key', 'gold')
-            ->assertJsonPath('data.effects.0.delta', -30);
+            ->assertJsonPath('data.town_id', $town->id)
+            ->assertJsonStructure(['data' => ['town_event_id', 'resolves_at']]);
 
-        $this->assertDatabaseHas('town_resources', ['id' => $resource->id, 'amount' => 70]);
+        $this->assertDatabaseHas('town_events', ['town_id' => $town->id, 'status' => 'pending']);
+        $this->assertSame(100, $resource->refresh()->amount);
+    }
+
+    public function test_an_admin_can_force_the_deadline(): void
+    {
+        ['town' => $town] = $this->seedTown();
+        $event = $this->worldEvent();
+        Sanctum::actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+        $this->postJson("/api/v1/admin/events/{$event->id}/trigger", [
+            'town_id' => $town->id,
+            'delay_minutes' => 0,
+        ])->assertOk();
+
+        $this->assertFalse(TownEvent::query()->firstOrFail()->resolves_at->isFuture());
     }
 
     public function test_a_non_admin_cannot_trigger_events(): void

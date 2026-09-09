@@ -27,12 +27,21 @@ const events = ref([])
 const emptyEventForm = () => ({
   name: '',
   description: '',
+  icon: '⚔️',
   type: 'world',
   difficulty: 'medium',
   effect_key_1: 'gold',
   effect_value_1: -20,
   effect_key_2: '',
   effect_value_2: -5,
+  requirement_key: 'soldiers',
+  requirement_value: 8,
+  success_key: 'gold',
+  success_value: 40,
+  failure_key: 'gold',
+  failure_value: -60,
+  delay_min_minutes: 60,
+  delay_max_minutes: 180,
 })
 const eventForm = ref(emptyEventForm())
 const creatingEvent = ref(false)
@@ -172,7 +181,6 @@ async function launchVote() {
     toast.success(`Vote lancé pour ${hours.value} h — que le peuple tranche !`)
     selectedLawIds.value = []
   } catch {
-    // Rien
   } finally {
     launching.value = false
   }
@@ -186,7 +194,6 @@ async function createLaw() {
     lawForm.value = { name: '', description: '', bonus_key: 'gold_bonus_pct', bonus_value: 10 }
     await loadLaws()
   } catch {
-    // Rien
   } finally {
     creating.value = false
   }
@@ -197,28 +204,43 @@ async function loadEvents() {
   events.value = data.data
 }
 
+const isAdventure = computed(() => eventForm.value.type === 'adventure')
+
 async function createEvent() {
   const form = eventForm.value
-  const effects = { [form.effect_key_1]: Number(form.effect_value_1) }
+  const payload = {
+    name: form.name,
+    description: form.description || null,
+    icon: form.icon || null,
+    type: form.type,
+    difficulty: form.difficulty,
+  }
 
-  if (form.effect_key_2 && form.effect_key_2 !== form.effect_key_1) {
-    effects[form.effect_key_2] = Number(form.effect_value_2)
+  if (isAdventure.value) {
+    const effects = { [form.effect_key_1]: Number(form.effect_value_1) }
+
+    if (form.effect_key_2 && form.effect_key_2 !== form.effect_key_1) {
+      effects[form.effect_key_2] = Number(form.effect_value_2)
+    }
+
+    payload.effects = effects
+  } else {
+    payload.requirement = form.requirement_key
+      ? { [form.requirement_key]: Number(form.requirement_value) }
+      : null
+    payload.success_effects = { [form.success_key]: Number(form.success_value) }
+    payload.failure_effects = { [form.failure_key]: Number(form.failure_value) }
+    payload.delay_min_minutes = Number(form.delay_min_minutes)
+    payload.delay_max_minutes = Number(form.delay_max_minutes)
   }
 
   creatingEvent.value = true
   try {
-    await adminService.createEvent({
-      name: form.name,
-      description: form.description || null,
-      type: form.type,
-      difficulty: form.difficulty,
-      effects,
-    })
+    await adminService.createEvent(payload)
     toast.success(`Événement « ${form.name} » créé.`)
     eventForm.value = emptyEventForm()
     await loadEvents()
   } catch {
-    // Rien
   } finally {
     creatingEvent.value = false
   }
@@ -244,7 +266,6 @@ async function triggerEvent(event) {
       .join(' · ')
     toast.success(`« ${event.name} » déclenché${effects ? ` : ${effects}` : ''}.`)
   } catch {
-    // Rien
   } finally {
     triggeringEventId.value = null
   }
@@ -463,56 +484,186 @@ function lawBonusText(law) {
             </label>
 
             <label class="block">
-              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Effet</span>
-              <select v-model="eventForm.effect_key_1" class="input mt-1">
-                <option v-for="option in EFFECT_OPTIONS" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
-
-            <label class="block">
               <span class="text-xs uppercase tracking-wide text-parchment-100/60">
-                Valeur (négative = perte)
+                Pastille (emoji)
               </span>
               <input
-                v-model.number="eventForm.effect_value_1"
-                type="number"
-                min="-500"
-                max="500"
-                required
+                v-model="eventForm.icon"
+                type="text"
+                maxlength="4"
+                placeholder="🪓"
                 class="input mt-1"
               />
             </label>
 
-            <label class="block">
-              <span class="text-xs uppercase tracking-wide text-parchment-100/60">
-                Second effet (optionnel)
-              </span>
-              <select v-model="eventForm.effect_key_2" class="input mt-1">
-                <option value="">Aucun</option>
-                <option
-                  v-for="option in EFFECT_OPTIONS"
-                  :key="option.value"
-                  :value="option.value"
-                  :disabled="option.value === eventForm.effect_key_1"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
+            <template v-if="isAdventure">
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">Effet</span>
+                <select v-model="eventForm.effect_key_1" class="input mt-1">
+                  <option
+                    v-for="option in EFFECT_OPTIONS"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
 
-            <label class="block">
-              <span class="text-xs uppercase tracking-wide text-parchment-100/60">Valeur</span>
-              <input
-                v-model.number="eventForm.effect_value_2"
-                type="number"
-                min="-500"
-                max="500"
-                :disabled="!eventForm.effect_key_2"
-                class="input mt-1"
-              />
-            </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Valeur (négative = perte)
+                </span>
+                <input
+                  v-model.number="eventForm.effect_value_1"
+                  type="number"
+                  min="-500"
+                  max="500"
+                  class="input mt-1"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Second effet (optionnel)
+                </span>
+                <select v-model="eventForm.effect_key_2" class="input mt-1">
+                  <option value="">Aucun</option>
+                  <option
+                    v-for="option in EFFECT_OPTIONS"
+                    :key="option.value"
+                    :value="option.value"
+                    :disabled="option.value === eventForm.effect_key_1"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">Valeur</span>
+                <input
+                  v-model.number="eventForm.effect_value_2"
+                  type="number"
+                  min="-500"
+                  max="500"
+                  :disabled="!eventForm.effect_key_2"
+                  class="input mt-1"
+                />
+              </label>
+            </template>
+
+            <template v-else>
+              <p class="text-xs text-parchment-100/50 sm:col-span-2">
+                La ville devra réunir l'exigence avant l'échéance. Sans exigence, l'événement est
+                toujours une victoire.
+              </p>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Exigence
+                </span>
+                <select v-model="eventForm.requirement_key" class="input mt-1">
+                  <option value="">Aucune</option>
+                  <option
+                    v-for="option in EFFECT_OPTIONS"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">Quantité</span>
+                <input
+                  v-model.number="eventForm.requirement_value"
+                  type="number"
+                  min="1"
+                  :disabled="!eventForm.requirement_key"
+                  class="input mt-1"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-green-300/70">
+                  En cas de victoire
+                </span>
+                <select v-model="eventForm.success_key" class="input mt-1">
+                  <option
+                    v-for="option in EFFECT_OPTIONS"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">Valeur</span>
+                <input
+                  v-model.number="eventForm.success_value"
+                  type="number"
+                  min="-500"
+                  max="500"
+                  class="input mt-1"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-red-300/70">
+                  En cas de défaite
+                </span>
+                <select v-model="eventForm.failure_key" class="input mt-1">
+                  <option
+                    v-for="option in EFFECT_OPTIONS"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">Valeur</span>
+                <input
+                  v-model.number="eventForm.failure_value"
+                  type="number"
+                  min="-500"
+                  max="500"
+                  class="input mt-1"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Délai minimum (min)
+                </span>
+                <input
+                  v-model.number="eventForm.delay_min_minutes"
+                  type="number"
+                  min="0"
+                  max="10080"
+                  class="input mt-1"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-xs uppercase tracking-wide text-parchment-100/60">
+                  Délai maximum (min)
+                </span>
+                <input
+                  v-model.number="eventForm.delay_max_minutes"
+                  type="number"
+                  :min="eventForm.delay_min_minutes"
+                  max="10080"
+                  class="input mt-1"
+                />
+              </label>
+            </template>
 
             <button
               type="submit"
@@ -520,7 +671,7 @@ function lawBonusText(law) {
               :disabled="
                 creatingEvent ||
                 eventForm.name.trim().length < 3 ||
-                Number(eventForm.effect_value_1) === 0
+                (isAdventure && Number(eventForm.effect_value_1) === 0)
               "
             >
               {{ creatingEvent ? 'Création…' : "Créer l'événement" }}

@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property EventType $type
  * @property EventDifficulty|null $difficulty
  * @property array<string, int>|null $effects
+ * @property array<string, int>|null $requirement
+ * @property array<string, int>|null $success_effects
+ * @property array<string, int>|null $failure_effects
+ * @property int|null $delay_min_minutes
+ * @property int|null $delay_max_minutes
+ * @property string|null $icon
  * @property int|null $weight
  */
 class Event extends Model
@@ -27,6 +33,12 @@ class Event extends Model
         'description',
         'image',
         'effects',
+        'requirement',
+        'success_effects',
+        'failure_effects',
+        'delay_min_minutes',
+        'delay_max_minutes',
+        'icon',
         'weight',
         'starts_at',
         'ends_at',
@@ -40,6 +52,11 @@ class Event extends Model
             'type' => EventType::class,
             'difficulty' => EventDifficulty::class,
             'effects' => 'array',
+            'requirement' => 'array',
+            'success_effects' => 'array',
+            'failure_effects' => 'array',
+            'delay_min_minutes' => 'integer',
+            'delay_max_minutes' => 'integer',
             'weight' => 'integer',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',

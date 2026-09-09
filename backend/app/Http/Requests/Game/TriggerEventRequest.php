@@ -20,6 +20,7 @@ class TriggerEventRequest extends FormRequest
     {
         return [
             'town_id' => ['required', 'integer', 'exists:towns,id'],
+            'delay_minutes' => ['nullable', 'integer', 'min:0', 'max:10080'],
         ];
     }
 }

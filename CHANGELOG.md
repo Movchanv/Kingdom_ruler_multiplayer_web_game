@@ -46,6 +46,22 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   événement et un sélecteur de ville cible. `GET /api/v1/admin/games` expose désormais les villes
   vivantes de chaque saison active pour alimenter ce choix.
 
+### Ajouté
+- **Événements annoncés à l'avance.** Une menace mondiale n'est plus appliquée sur-le-champ : elle
+  est posée sur une ville avec une échéance, une exigence à tenir et deux issues. Nouvelle table
+  `town_events` portant les instances, distincte du catalogue `events`.
+- **Pastille à rebours dans la vue ville** (`TownEventPanel.vue`) : une pastille ronde par menace,
+  avec son icône et le temps restant, virant à l'orange sous une heure et pulsant en rouge sous
+  quinze minutes. Au clic, le détail affiche l'exigence confrontée aux ressources actuelles et les
+  conséquences de chaque issue.
+- **Historique des événements** : les dix dernières menaces résolues, avec leur issue et les
+  effets réellement appliqués.
+- Commande `events:resolve`, planifiée chaque minute, qui règle les menaces arrivées à échéance.
+- Le catalogue accepte désormais une exigence, des conséquences de victoire et de défaite, une
+  fourchette de délai et une pastille — champs exposés dans le formulaire d'administration.
+- Six menaces mondiales dans le seeder, dont « Attaque des barbares » et « Siège hivernal »,
+  couvrant enfin le bois et la pierre jusqu'ici jamais touchés.
+
 ### Modifié
 - Les événements mondiaux ne sont plus rangés dans un palier fixe. Un **score de pression**
   combine l'ancienneté de la saison (poids 0,35) et **le nombre d'actions jouées depuis le
@@ -81,6 +97,14 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   car `GameService::join()` exige une saison active et au moins une ville) et
   `DemoAccountsSeeder` (comptes de démonstration). `DatabaseSeeder` n'appelle ce dernier que
   dans les environnements `local` et `testing`.
+
+### Modifié
+- Le déclenchement manuel par un administrateur programme lui aussi la menace au lieu de
+  l'appliquer instantanément ; un paramètre `delay_minutes` permet de forcer l'échéance.
+- L'intensité issue de la pression multiplie désormais **l'exigence autant que les conséquences** :
+  une menace plus dure réclame davantage et frappe plus fort. Exigence et conséquences sont figées
+  à l'annonce, pour que le joueur voie exactement ce qui lui est demandé.
+- Les aventures restent instantanées : elles sont tirées par le joueur, pas annoncées.
 
 ### Corrigé
 - **Pile de production impossible à démarrer** : `docker-compose.prod.yml` n'était pas un

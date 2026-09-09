@@ -19,6 +19,7 @@ import BuildingHotspot from '@/components/game/BuildingHotspot.vue'
 import BuildingPanel from '@/components/game/BuildingPanel.vue'
 import AdventurePanel from '@/components/game/AdventurePanel.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
+import TownEventPanel from '@/components/game/TownEventPanel.vue'
 
 const auth = useAuthStore()
 const game = useGameStore()
@@ -165,6 +166,14 @@ const adventureHotspot = computed(() => {
     </div>
 
     <div class="pointer-events-none absolute inset-0 shadow-[inset_0_0_120px_40px_rgba(0,0,0,0.55)]" />
+
+    <TownEventPanel
+      v-if="town"
+      :pending-events="town.pending_events ?? []"
+      :history="town.event_history ?? []"
+      :resources="town.resources ?? []"
+      :loyalty="town.loyalty ?? 0"
+    />
 
     <header class="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4">
       <RouterLink :to="{ name: 'kingdom' }" class="btn-ghost">← Carte du royaume</RouterLink>
