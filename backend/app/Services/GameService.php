@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\GameStatus;
+use App\Enums\TownEventStatus;
 use App\Models\Country;
 use App\Models\Game;
 use App\Models\Player;
 use App\Models\Town;
 use App\Models\TownBuilding;
+use App\Models\TownEvent;
 use App\Models\TownResource;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -181,6 +183,7 @@ final class GameService
                 'townResources.resource',
                 'townBuildings.building.levels',
                 'townLaws.law',
+                'townEvents.event',
             ])
             ->find($townId);
 
@@ -205,6 +208,33 @@ final class GameService
                     'capacity' => $townResource->capacity,
                 ])->all(),
             'bonuses' => $this->bonuses->forTown($town),
+            'pending_events' => $town->townEvents
+                ->filter(fn (TownEvent $townEvent): bool => $townEvent->status === TownEventStatus::Pending)
+                ->sortBy('resolves_at')
+                ->map(fn (TownEvent $townEvent): array => [
+                    'id' => $townEvent->id,
+                    'name' => $townEvent->event->name,
+                    'description' => $townEvent->event->description,
+                    'icon' => $townEvent->event->icon ?? '⚔️',
+                    'difficulty' => $townEvent->event->difficulty?->value,
+                    'resolves_at' => $townEvent->resolves_at->toIso8601String(),
+                    'requirement' => $townEvent->requirement ?? [],
+                    'success_effects' => $townEvent->success_effects ?? [],
+                    'failure_effects' => $townEvent->failure_effects ?? [],
+                ])->values()->all(),
+            'event_history' => $town->townEvents
+                ->filter(fn (TownEvent $townEvent): bool => $townEvent->status !== TownEventStatus::Pending)
+                ->sortByDesc('resolved_at')
+                ->take(10)
+                ->map(fn (TownEvent $townEvent): array => [
+                    'id' => $townEvent->id,
+                    'name' => $townEvent->event->name,
+                    'icon' => $townEvent->event->icon ?? '⚔️',
+                    'status' => $townEvent->status->value,
+                    'resolved_at' => $townEvent->resolved_at?->toIso8601String(),
+                    'requirement' => $townEvent->requirement ?? [],
+                    'outcome' => $townEvent->outcome ?? [],
+                ])->values()->all(),
             'laws' => $town->townLaws
                 ->filter(fn ($townLaw): bool => $townLaw->expires_at === null || $townLaw->expires_at->isFuture())
                 ->map(fn ($townLaw): array => [

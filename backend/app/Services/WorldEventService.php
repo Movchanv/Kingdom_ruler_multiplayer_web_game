@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 final class WorldEventService
 {
-    public function __construct(private readonly EventService $events) {}
+    public function __construct(
+        private readonly EventService $events,
+        private readonly TownEventService $townEvents,
+    ) {}
 
     public function tick(): int
     {
@@ -56,23 +59,25 @@ final class WorldEventService
             return null;
         }
 
-        $applied = DB::transaction(function () use ($event, $town, $game, $intensity): array {
-            $result = $this->events->applyToTown($event, $town, $intensity);
+        $townEvent = DB::transaction(function () use ($event, $town, $game, $intensity) {
+            $scheduled = $this->townEvents->schedule($event, $town, $intensity);
             $game->forceFill(['last_world_event_at' => Carbon::now()])->save();
 
-            return $result;
+            return $scheduled;
         });
 
         return [
             'game_id' => $game->id,
             'town_id' => $town->id,
+            'town_event_id' => $townEvent->id,
             'event' => $event->name,
             'difficulty' => $difficulty->value,
             'pressure' => round($pressure, 2),
             'intensity' => round($intensity, 2),
             'chances' => array_map(static fn (float $w): float => round($w, 3), $chances),
             'actions_since_last_event' => $actionsSince,
-            'effects' => $applied,
+            'resolves_at' => $townEvent->resolves_at->toIso8601String(),
+            'requirement' => $townEvent->requirement ?? [],
         ];
     }
 
