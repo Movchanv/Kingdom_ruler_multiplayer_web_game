@@ -101,4 +101,12 @@ class Town extends Model
     {
         return $this->hasMany(TownLaw::class);
     }
+
+    /**
+     * @return HasMany<TownEvent, $this>
+     */
+    public function townEvents(): HasMany
+    {
+        return $this->hasMany(TownEvent::class);
+    }
 }

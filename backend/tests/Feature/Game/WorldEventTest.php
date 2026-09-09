@@ -14,6 +14,7 @@ use App\Models\Game;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\Town;
+use App\Models\TownEvent;
 use App\Models\TownResource;
 use App\Services\WorldEventService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,10 +95,16 @@ final class WorldEventTest extends TestCase
         $result = $this->service()->fire($game);
 
         $this->assertNotNull($result);
-        $this->assertSame('easy', $result['difficulty']);
-        $this->assertDatabaseHas('town_resources', ['town_id' => $town->id, 'amount' => 70]);
-        $this->assertDatabaseHas('towns', ['id' => $town->id, 'loyalty' => 97]);
+        $this->assertContains($result['difficulty'], ['easy', 'medium', 'hard']);
         $this->assertNotNull($game->refresh()->last_world_event_at);
+
+        $this->assertDatabaseHas('town_resources', ['town_id' => $town->id, 'amount' => 100]);
+        $this->assertDatabaseHas('towns', ['id' => $town->id, 'loyalty' => 100]);
+        $this->assertDatabaseHas('town_events', [
+            'town_id' => $town->id,
+            'status' => 'pending',
+        ]);
+        $this->assertTrue(TownEvent::query()->firstOrFail()->resolves_at->isFuture());
     }
 
     public function test_an_event_is_not_fired_again_within_the_cadence_window(): void
@@ -189,9 +196,11 @@ final class WorldEventTest extends TestCase
         $this->assertNotNull($result);
         $this->assertSame(2.0, $result['intensity']);
 
-        $applied = collect($result['effects'])->firstWhere('key', 'food');
-        $this->assertNotNull($applied);
-        $this->assertSame(-40, $applied['delta']);
+        $townEvent = TownEvent::query()->firstOrFail();
+        $this->assertSame(-40, $townEvent->failure_effects['food']);
+        $this->assertSame(2.0, $townEvent->intensity);
+
+        $this->assertDatabaseHas('town_resources', ['town_id' => $town->id, 'amount' => 200]);
     }
 
     public function test_only_actions_since_the_last_event_are_counted(): void
