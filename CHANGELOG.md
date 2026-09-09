@@ -117,14 +117,6 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   `APP_FAKER_LOCALE` à `fr_FR`.
 
 ### Corrigé
-- Le panneau de construction affichait la clé technique des ressources (« wood », « stone ») au
-  lieu de leur nom français dans le coût d'amélioration.
-- Les e-mails de vérification d'adresse et de réinitialisation de mot de passe partaient en
-  anglais : les chaînes des notifications Laravel sont désormais traduites.
-- L'écran de recherche listait les clés d'action (`mine_gold`) plutôt que leur libellé ; l'API
-  renvoie maintenant le nom, y compris dans l'export CSV.
-- Panneau d'administration : les dépendances de la supervision (`database`, `cache`, `redis`) et
-  le périmètre des signalements (`frontend`, `backend`…) s'affichaient en anglais.
 - Les exigences d'un événement affichaient la clé technique de la ressource (« stone », « wood »)
   au lieu de son nom français. Le panneau utilise désormais le nom porté par la ville, avec repli
   sur une table de correspondance pour une ressource absente de l'inventaire.

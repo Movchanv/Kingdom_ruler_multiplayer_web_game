@@ -72,19 +72,6 @@ const EVENT_DIFFICULTY_LABELS = {
   hard: 'Difficile',
 }
 
-const DEPENDENCY_LABELS = {
-  database: 'Base de données',
-  cache: 'Cache',
-  redis: 'Redis',
-}
-
-const SCOPE_LABELS = {
-  frontend: 'Interface',
-  backend: 'Action de jeu',
-  realtime: 'Temps réel',
-  other: 'Autre',
-}
-
 const EFFECT_OPTIONS = [
   { value: 'gold', label: 'Or' },
   { value: 'food', label: 'Nourriture' },
