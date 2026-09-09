@@ -778,7 +778,7 @@ function lawBonusText(law) {
               class="rounded-lg border border-iron-700 bg-iron-900/60 p-3 text-center"
             >
               <p class="text-xl">{{ up ? '✅' : '❌' }}</p>
-              <p class="mt-0.5 text-xs capitalize text-parchment-100/70">{{ name }}</p>
+              <p class="mt-0.5 text-xs text-parchment-100/70">{{ DEPENDENCY_LABELS[name] ?? name }}</p>
             </div>
 
             <div class="rounded-lg border border-iron-700 bg-iron-900/60 p-3 text-center">
@@ -841,7 +841,8 @@ function lawBonusText(law) {
               </div>
               <p class="mt-1 text-sm text-parchment-100">{{ report.title }}</p>
               <p class="mt-0.5 text-xs text-parchment-100/60">
-                {{ report.scope }}<template v-if="report.page"> · {{ report.page }}</template>
+                {{ SCOPE_LABELS[report.scope] ?? report.scope
+                }}<template v-if="report.page"> · {{ report.page }}</template>
                 <template v-if="report.reported_by"> · signalé par {{ report.reported_by }}</template>
               </p>
             </li>
