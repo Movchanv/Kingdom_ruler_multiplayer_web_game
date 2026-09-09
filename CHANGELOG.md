@@ -116,7 +116,20 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - `APP_LOCALE` et `APP_FALLBACK_LOCALE` passent à `fr` dans les trois modèles d'environnement,
   `APP_FAKER_LOCALE` à `fr_FR`.
 
+### Ajouté
+- Les menaces résolues restent visibles dans la vue ville : les **quatre dernières** s'affichent
+  sous les menaces en cours, en vert ou rouge selon l'issue. Un clic ouvre le détail (ce qu'il
+  fallait réunir, conséquences réellement appliquées, ancienneté), une croix la retire de la
+  liste. Les fermetures sont mémorisées dans le navigateur.
+
 ### Corrigé
+- **Les événements restaient bloqués à « 0 s » sans jamais se résoudre.** `withoutOverlapping()`
+  pose un verrou libéré en fin d'exécution : un processus interrompu — un redémarrage de conteneur
+  pendant un déploiement, par exemple — laissait le verrou en place, et Laravel sautait la tâche à
+  chaque minute pendant 24 heures. Les cinq tâches planifiées reçoivent désormais une expiration
+  explicite (5 à 30 minutes selon leur fréquence).
+- Le compte à rebours affiche « Résolution… » une fois l'échéance atteinte, au lieu de rester
+  figé sur « 0 s » pendant que l'ordonnanceur traite la menace.
 - Les exigences d'un événement affichaient la clé technique de la ressource (« stone », « wood »)
   au lieu de son nom français. Le panneau utilise désormais le nom porté par la ville, avec repli
   sur une table de correspondance pour une ressource absente de l'inventaire.
