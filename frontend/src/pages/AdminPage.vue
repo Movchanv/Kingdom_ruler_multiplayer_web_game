@@ -66,6 +66,12 @@ const EVENT_DIFFICULTY_OPTIONS = [
   { value: 'hard', label: 'Difficile' },
 ]
 
+const EVENT_DIFFICULTY_LABELS = {
+  easy: 'Facile',
+  medium: 'Moyenne',
+  hard: 'Difficile',
+}
+
 const EFFECT_OPTIONS = [
   { value: 'gold', label: 'Or' },
   { value: 'food', label: 'Nourriture' },
@@ -716,7 +722,7 @@ function lawBonusText(law) {
                     <span
                       class="rounded-full border border-iron-600 px-2 py-0.5 text-xs text-parchment-100/70"
                     >
-                      {{ event.difficulty }}
+                      {{ EVENT_DIFFICULTY_LABELS[event.difficulty] ?? event.difficulty }}
                     </span>
                   </div>
 

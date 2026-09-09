@@ -62,6 +62,12 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
 - Six menaces mondiales dans le seeder, dont « Attaque des barbares » et « Siège hivernal »,
   couvrant enfin le bois et la pierre jusqu'ici jamais touchés.
 
+### Ajouté
+- Traductions françaises complètes côté serveur : `lang/fr.json` pour les 51 messages propres à
+  l'application, et `lang/fr/` pour `auth`, `validation`, `passwords` et `pagination`. Les noms de
+  champs sont traduits (`email` → « adresse e-mail », `requirement` → « exigence »…), de sorte que
+  les erreurs de formulaire se lisent entièrement en français.
+
 ### Modifié
 - Les événements mondiaux ne sont plus rangés dans un palier fixe. Un **score de pression**
   combine l'ancienneté de la saison (poids 0,35) et **le nombre d'actions jouées depuis le
@@ -106,7 +112,16 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   à l'annonce, pour que le joueur voie exactement ce qui lui est demandé.
 - Les aventures restent instantanées : elles sont tirées par le joueur, pas annoncées.
 
+### Modifié
+- `APP_LOCALE` et `APP_FALLBACK_LOCALE` passent à `fr` dans les trois modèles d'environnement,
+  `APP_FAKER_LOCALE` à `fr_FR`.
+
 ### Corrigé
+- Les exigences d'un événement affichaient la clé technique de la ressource (« stone », « wood »)
+  au lieu de son nom français. Le panneau utilise désormais le nom porté par la ville, avec repli
+  sur une table de correspondance pour une ressource absente de l'inventaire.
+- La difficulté d'un événement s'affichait en anglais dans le catalogue du panneau
+  d'administration.
 - **Pile de production impossible à démarrer** : `docker-compose.prod.yml` n'était pas un
   YAML valide (`did not find expected key`, ligne 39). Les entrées `- vue` et `- reverb`
   figuraient dans le bloc `healthcheck` du service `nginx` au lieu de son `depends_on`.

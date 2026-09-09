@@ -88,7 +88,16 @@ const RESOURCE_NAMES = {
   wood: 'bois',
   stone: 'pierre',
   soldiers: 'soldats',
+  iron: 'fer',
+  coal: 'charbon',
   loyalty: 'loyauté',
+  free_action: 'action offerte',
+}
+
+export function resourceLabel(key) {
+  const name = RESOURCE_NAMES[key]
+
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : key
 }
 
 export function bonusLabel(key, value) {
