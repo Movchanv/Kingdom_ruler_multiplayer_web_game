@@ -86,8 +86,8 @@ final class ResearchController extends Controller
     {
         $rows = DB::table('action_logs')
             ->join('actions', 'actions.id', '=', 'action_logs.action_id')
-            ->groupBy('actions.key')
-            ->select('actions.key')
+            ->groupBy('actions.key', 'actions.name')
+            ->select('actions.key', 'actions.name')
             ->selectRaw('COUNT(*) as count, SUM(action_logs.xp_gained) as xp')
             ->orderByDesc('count')
             ->get();
@@ -95,7 +95,7 @@ final class ResearchController extends Controller
         $data = [];
         foreach ($rows as $row) {
             $data[] = [
-                'action' => (string) $row->key,
+                'action' => (string) ($row->name ?: $row->key),
                 'count' => (int) $row->count,
                 'xp' => (int) $row->xp,
             ];

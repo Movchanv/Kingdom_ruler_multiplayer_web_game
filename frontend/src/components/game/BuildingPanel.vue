@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useGameStore } from '@/stores/game'
 import { gameService } from '@/services/game.service'
-import { buildingMeta, resourceIcon, bonusLabel } from '@/config/townBuildings'
+import { buildingMeta, resourceIcon, resourceLabel, bonusLabel } from '@/config/townBuildings'
 
 const props = defineProps({
   building: { type: Object, required: true },
@@ -262,7 +262,7 @@ async function castBallot(optionId) {
           <div class="mt-2 space-y-2">
             <div v-for="row in upgradeRows" :key="row.key">
               <div class="flex items-center justify-between text-xs text-parchment-100/80">
-                <span>{{ resourceIcon(row.key) }} {{ row.key }}</span>
+                <span>{{ resourceIcon(row.key) }} {{ resourceLabel(row.key) }}</span>
                 <span>{{ row.done }} / {{ row.required }}</span>
               </div>
               <div class="mt-0.5 h-2 overflow-hidden rounded-full bg-iron-800">
