@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import router from '@/router'
 import { authService } from '@/services/auth.service'
 import { getToken, setToken } from '@/services/api'
 
@@ -58,6 +59,10 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.token = null
         setToken(null)
+
+        if (router.currentRoute.value.name !== 'home') {
+          await router.push({ name: 'home' })
+        }
       }
     },
   },
