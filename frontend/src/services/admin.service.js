@@ -21,6 +21,10 @@ export const adminService = {
     return api.post('/admin/events', payload)
   },
 
+  triggerEvent(eventId, townId) {
+    return api.post(`/admin/events/${eventId}/trigger`, { town_id: townId })
+  },
+
   openVote({ gameId, countryId, lawIds, hours }) {
     return api.post('/admin/votes', {
       game_id: gameId,
