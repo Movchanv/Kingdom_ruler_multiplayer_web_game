@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { resourceIcon, resourceLabel } from '@/config/townBuildings'
+import { eventIcon } from '@/config/eventIcon'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps({
   pendingEvents: { type: Array, default: () => [] },
@@ -106,21 +108,21 @@ function label(key) {
 }
 
 function icon(key) {
-  if (key === 'loyalty') return '❤️'
-  if (key === 'free_action') return '✨'
+  if (key === 'loyalty') return 'loyaute'
+  if (key === 'free_action') return 'action'
   return resourceIcon(key)
 }
 
 function effectsText(effects) {
   return Object.entries(effects ?? {})
-    .map(([key, value]) => icon(key) + ' ' + (value > 0 ? '+' : '') + value)
+    .map(([key, value]) => label(key) + ' ' + (value > 0 ? '+' : '') + value)
     .join('  ')
 }
 
 function outcomeText(entry) {
   const applied = (entry.outcome ?? [])
     .filter((effect) => effect.delta !== 0)
-    .map((effect) => icon(effect.key) + ' ' + (effect.delta > 0 ? '+' : '') + effect.delta)
+    .map((effect) => label(effect.key) + ' ' + (effect.delta > 0 ? '+' : '') + effect.delta)
     .join('  ')
 
   return applied || 'aucun effet'
@@ -164,7 +166,8 @@ function toggle(entry) {
       :title="event.name"
       @click="toggle(event)"
     >
-      <span class="text-2xl leading-none">{{ event.icon }}</span>
+      <AppIcon v-if="eventIcon(event.icon)" :name="eventIcon(event.icon)" class="text-2xl" />
+      <span v-else class="text-2xl leading-none">{{ event.icon }}</span>
       <span class="event-badge__time">{{ countdown(event) }}</span>
     </button>
 
@@ -183,9 +186,10 @@ function toggle(entry) {
         :title="entry.name"
         @click="toggle(entry)"
       >
-        <span class="text-2xl leading-none">{{ entry.icon }}</span>
+        <AppIcon v-if="eventIcon(entry.icon)" :name="eventIcon(entry.icon)" class="text-2xl" />
+        <span v-else class="text-2xl leading-none">{{ entry.icon }}</span>
         <span class="event-badge__time">
-          {{ entry.status === 'succeeded' ? '✅' : '❌' }}
+          <AppIcon :name="entry.status === 'succeeded' ? 'succes' : 'echec'" />
         </span>
       </button>
 
@@ -195,7 +199,7 @@ function toggle(entry) {
         title="Retirer de la liste"
         @click.stop="dismiss(entry)"
       >
-        ✕
+        <AppIcon name="fermer" />
       </button>
     </div>
 
@@ -204,7 +208,12 @@ function toggle(entry) {
       class="w-72 rounded-lg border border-iron-700 bg-iron-900/95 p-4 text-sm shadow-xl backdrop-blur"
     >
       <div class="flex items-start gap-2">
-        <span class="text-2xl leading-none">{{ openedPending.icon }}</span>
+        <AppIcon
+          v-if="eventIcon(openedPending.icon)"
+          :name="eventIcon(openedPending.icon)"
+          class="text-2xl"
+        />
+        <span v-else class="text-2xl leading-none">{{ openedPending.icon }}</span>
         <div>
           <h3 class="font-heading text-base text-gold-400">{{ openedPending.name }}</h3>
           <p class="text-xs text-parchment-100/60">Dans {{ countdown(openedPending) }}</p>
@@ -224,7 +233,9 @@ function toggle(entry) {
             class="flex items-center justify-between text-xs"
             :class="(amounts[key] ?? 0) >= needed ? 'text-green-300' : 'text-red-300'"
           >
-            <span>{{ icon(key) }} {{ label(key) }}</span>
+            <span class="flex items-center gap-1.5">
+              <AppIcon :name="icon(key)" /> {{ label(key) }}
+            </span>
             <span>{{ amounts[key] ?? 0 }} / {{ needed }}</span>
           </li>
         </ul>
@@ -263,7 +274,12 @@ function toggle(entry) {
       "
     >
       <div class="flex items-start gap-2">
-        <span class="text-2xl leading-none">{{ openedResolved.icon }}</span>
+        <AppIcon
+          v-if="eventIcon(openedResolved.icon)"
+          :name="eventIcon(openedResolved.icon)"
+          class="text-2xl"
+        />
+        <span v-else class="text-2xl leading-none">{{ openedResolved.icon }}</span>
         <div class="flex-1">
           <h3 class="font-heading text-base text-gold-400">{{ openedResolved.name }}</h3>
           <p class="text-xs text-parchment-100/60">{{ resolvedAgo(openedResolved) }}</p>
@@ -274,7 +290,7 @@ function toggle(entry) {
           title="Retirer de la liste"
           @click="dismiss(openedResolved)"
         >
-          ✕
+          <AppIcon name="fermer" />
         </button>
       </div>
 
@@ -286,7 +302,10 @@ function toggle(entry) {
             : 'bg-red-400/10 text-red-300'
         "
       >
-        {{ openedResolved.status === 'succeeded' ? '🏆 Victoire' : '💥 Défaite' }}
+        <template v-if="openedResolved.status === 'succeeded'">
+          <AppIcon name="victoire" /> Victoire
+        </template>
+        <template v-else><AppIcon name="defaite" /> Défaite</template>
       </p>
 
       <div v-if="Object.keys(openedResolved.requirement ?? {}).length" class="mt-3">
@@ -297,7 +316,9 @@ function toggle(entry) {
             :key="key"
             class="flex items-center justify-between text-xs text-parchment-100/70"
           >
-            <span>{{ icon(key) }} {{ label(key) }}</span>
+            <span class="flex items-center gap-1.5">
+              <AppIcon :name="icon(key)" /> {{ label(key) }}
+            </span>
             <span>{{ needed }}</span>
           </li>
         </ul>

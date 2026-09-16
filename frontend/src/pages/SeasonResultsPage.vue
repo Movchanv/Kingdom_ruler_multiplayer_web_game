@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { gameService } from '@/services/game.service'
 
@@ -24,7 +25,7 @@ const myRank = computed(
   () => ranking.value.find((entry) => entry.user_id === auth.user?.id) ?? null,
 )
 
-const MEDALS = ['🥇', '🥈', '🥉']
+const MEDALS = ['podium-1', 'podium-2', 'podium-3']
 
 onMounted(async () => {
   try {
@@ -73,7 +74,12 @@ function endedDate() {
           <p class="mt-2 text-sm text-parchment-100/70">
             <template v-if="season.country">{{ season.country }} — </template>{{ endedDate() }}
           </p>
-          <p v-if="reasonLabel" class="mt-1 text-sm italic text-red-400/90">⚔️ {{ reasonLabel }}</p>
+          <p
+            v-if="reasonLabel"
+            class="mt-1 flex items-center justify-center gap-1.5 text-sm italic text-red-400/90"
+          >
+            <AppIcon name="soldats" /> {{ reasonLabel }}
+          </p>
         </div>
 
         <div
@@ -102,7 +108,7 @@ function endedDate() {
               entry.user_id === auth.user?.id ? 'ring-2 ring-gold-400' : '',
             ]"
           >
-            <p class="text-3xl">{{ MEDALS[index] }}</p>
+            <AppIcon v-if="MEDALS[index]" :name="MEDALS[index]" class="text-3xl" />
             <p class="mt-1 truncate font-heading text-sm text-parchment-100">{{ nameOf(entry) }}</p>
             <p class="text-xs text-gold-400">{{ entry.xp }} XP</p>
             <p class="text-xs text-parchment-100/50">{{ entry.actions }} actions</p>

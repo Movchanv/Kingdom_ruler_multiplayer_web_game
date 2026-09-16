@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps({
   town: { type: Object, required: true },
@@ -26,7 +27,7 @@ const variant = computed(() => {
   return props.town.is_current ? 'current' : 'available'
 })
 
-const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
+const icon = computed(() => (isDestroyed.value ? 'incendie' : 'village'))
 </script>
 
 <template>
@@ -55,7 +56,7 @@ const icon = computed(() => (isDestroyed.value ? '🔥' : '🏘️'))
 
     <template v-else>
       <span class="badge">
-        <span class="text-xl leading-none drop-shadow">{{ icon }}</span>
+        <AppIcon :name="icon" class="text-xl drop-shadow" />
       </span>
       <span class="nameplate">{{ town.name }}</span>
     </template>
