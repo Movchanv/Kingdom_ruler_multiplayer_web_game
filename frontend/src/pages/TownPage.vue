@@ -4,6 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGameStore } from '@/stores/game'
 import { useEcho } from '@/composables/useEcho'
+import { preloadImages } from '@/composables/useImagePreload'
 import { toPercent } from '@/config/worldMap'
 import {
   townImageFor,
@@ -20,6 +21,7 @@ import BuildingPanel from '@/components/game/BuildingPanel.vue'
 import AdventurePanel from '@/components/game/AdventurePanel.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
 import TownEventPanel from '@/components/game/TownEventPanel.vue'
+import LoadingVeil from '@/components/game/LoadingVeil.vue'
 
 const auth = useAuthStore()
 const game = useGameStore()
@@ -32,6 +34,7 @@ const mapImageMissing = ref(false)
 const selectedBuilding = ref(null)
 const adventureOpen = ref(false)
 const loading = ref(true)
+const progress = ref(0)
 
 const user = computed(() => auth.user)
 const town = computed(() => game.town)
@@ -67,6 +70,14 @@ onMounted(async () => {
     }
 
     subscribeToTown(game.town.id)
+
+    await preloadImages([
+      townImage.value,
+      ...buildingViews.value.map((view) => view.hotspot?.image),
+      adventureHotspot.value?.image,
+    ], {
+      onProgress: (ratio) => (progress.value = ratio),
+    })
   } finally {
     loading.value = false
   }
@@ -100,7 +111,11 @@ const adventureHotspot = computed(() => {
 
 <template>
   <div class="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-iron-900">
-    <div class="relative max-h-full max-w-full" :style="{ aspectRatio: TOWN_IMAGE_RATIO }">
+    <div
+      v-if="!loading"
+      class="relative max-h-full max-w-full"
+      :style="{ aspectRatio: TOWN_IMAGE_RATIO }"
+    >
       <img
         v-if="townImage && !mapImageMissing"
         :src="townImage"
@@ -234,12 +249,7 @@ const adventureHotspot = computed(() => {
       </h1>
     </div>
 
-    <div
-      v-if="loading"
-      class="absolute inset-0 z-30 flex items-center justify-center bg-iron-900/70 backdrop-blur-sm"
-    >
-      <p class="animate-pulse font-heading text-xl text-gold-400">Passage des portes de la ville…</p>
-    </div>
+    <LoadingVeil :show="loading" :progress="progress" label="Passage des portes de la ville…" />
 
     <BuildingPanel
       v-if="selectedBuilding"

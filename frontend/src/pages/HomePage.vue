@@ -107,6 +107,6 @@ onClickOutside(langRef, () => {
 <style scoped>
 .home-bg {
   background-color: #1f2937;
-  background-image: url('/home-bg.png');
+  background-image: url('/home-bg.webp');
 }
 </style>
