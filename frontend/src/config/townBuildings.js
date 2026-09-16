@@ -46,22 +46,22 @@ export function buildingMeta(key) {
 }
 
 export const BUILDING_IMAGES = {
-  town_hall: '/buildings/hotel-de-ville.png',
-  farm: '/buildings/ferme.png',
-  forest: '/buildings/foret.png',
-  mine: '/buildings/mine-de-pierre.png',
-  barracks: '/buildings/caserne.png',
-  market: '/buildings/place-du-marche.png',
+  town_hall: '/buildings/hotel-de-ville.webp',
+  farm: '/buildings/ferme.webp',
+  forest: '/buildings/foret.webp',
+  mine: '/buildings/mine-de-pierre.webp',
+  barracks: '/buildings/caserne.webp',
+  market: '/buildings/place-du-marche.webp',
 }
 
 export function buildingImageFor(key) {
   return BUILDING_IMAGES[key] ?? null
 }
 
-export const ADVENTURE_IMAGE = '/buildings/aventure.png'
+export const ADVENTURE_IMAGE = '/buildings/aventure.webp'
 
 export const TOWN_EMBLEMS = {
-  Paris: '/towns/paris.png',
+  Paris: '/towns/paris.webp',
 }
 
 export function townEmblemFor(name) {
@@ -117,7 +117,7 @@ export function bonusLabel(key, value) {
 }
 
 export const TOWN_IMAGES = {
-  Paris: '/town-paris.png',
+  Paris: '/town-paris.webp',
 }
 
 export function townImageFor(name) {

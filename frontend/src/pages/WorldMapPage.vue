@@ -101,7 +101,7 @@ async function joinSelected() {
       >
         <span class="text-4xl">🗺️</span>
         <p class="max-w-xs text-sm text-parchment-100/70">
-          Ajoutez l'image <code class="text-gold-400">world-map.png</code> dans
+          Ajoutez l'image <code class="text-gold-400">world-map.webp</code> dans
           <code class="text-gold-400">frontend/public/</code> pour afficher la carte.
         </p>
       </div>
