@@ -3,7 +3,7 @@ Retrouve chaque vignette de bâtiment (découpe) dans l'image globale de la vill
 par détection d'image (template matching, OpenCV), puis génère les rectangles
 exacts (en % de l'image) dans `src/config/townRects.js`.
 
-Chaque vignette de `public/buildings/*.png` est un extrait de `public/town-*.png` :
+Chaque vignette de `public/buildings/*.webp` est un extrait de `public/town-*.webp` :
 le script la localise, gère la transparence (canal alpha comme masque) et cherche
 sur une plage d'échelles au cas où l'export n'est pas à la taille d'origine.
 
@@ -24,15 +24,15 @@ OUT = os.path.normpath(os.path.join(HERE, "..", "src", "config", "townRects.js")
 # Ville -> image de fond + (clé bâtiment -> fichier de découpe)
 TOWNS = {
     "Paris": {
-        "background": "town-paris.png",
+        "background": "town-paris.webp",
         "pieces": {
-            "town_hall": "buildings/hotel-de-ville.png",
-            "caserne": "buildings/caserne.png",
-            "market": "buildings/place-du-marche.png",
-            "mine": "buildings/mine-de-pierre.png",
-            "ferme": "buildings/ferme.png",
-            "forest": "buildings/foret.png",
-            "adventure": "buildings/aventure.png",
+            "town_hall": "buildings/hotel-de-ville.webp",
+            "caserne": "buildings/caserne.webp",
+            "market": "buildings/place-du-marche.webp",
+            "mine": "buildings/mine-de-pierre.webp",
+            "ferme": "buildings/ferme.webp",
+            "forest": "buildings/foret.webp",
+            "adventure": "buildings/aventure.webp",
         },
     },
 }

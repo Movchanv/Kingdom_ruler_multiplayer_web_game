@@ -1,9 +1,9 @@
 /**
- * Positions des pays sur la carte du monde, en % de l'image (world-map.png).
+ * Positions des pays sur la carte du monde, en % de l'image (world-map.webp).
  * Clé = slug du pays côté API. À terme, chaque pays aura aussi son image de
  * surbrillance (superposée au survol) : on la déclarera ici (`overlay`).
  */
-export const WORLD_MAP_IMAGE = '/world-map.png'
+export const WORLD_MAP_IMAGE = '/world-map.webp'
 
 export const COUNTRY_POSITIONS = {
   'france-medievale': { x: 22, y: 58 },
@@ -18,7 +18,7 @@ export function positionFor(slug) {
 
 /** Image de la carte de chaque pays (villes positionnées dessus). */
 export const COUNTRY_MAPS = {
-  'france-medievale': '/map-france.png',
+  'france-medievale': '/map-france.webp',
 }
 
 export function countryMapFor(slug) {
@@ -27,11 +27,11 @@ export function countryMapFor(slug) {
 
 /**
  * Calque plein cadre de chaque pays, superposé sur la carte du monde et aligné
- * pixel-perfect (même dimensions que world-map.png, 1402×1122). Chaque calque
+ * pixel-perfect (même dimensions que world-map.webp, 1402×1122). Chaque calque
  * ne dessine que sa région ; le reste est transparent.
  */
 export const COUNTRY_OVERLAYS = {
-  'france-medievale': '/overlays/france.png',
+  'france-medievale': '/overlays/france.webp',
 }
 
 export function countryOverlayFor(slug) {
