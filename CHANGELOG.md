@@ -182,6 +182,17 @@ Chaque version publiée correspond à une étiquette Git (`tag`) et à une note 
   croissance mémoire non bornée et écriture de prototype). Dépendance transitive
   d'`autoprefixer` ; seul le fichier de verrouillage est modifié.
 
+### Corrigé
+- **#46** — HTTP 500 sur toutes les routes d'API ouvertes depuis un navigateur sans être
+  authentifié — cas rencontré par un chercheur collant dans sa barre d'adresse les URL
+  affichées sur son écran. Laravel 11 installe par défaut une redirection des visiteurs non
+  authentifiés vers la route `login` ; cette API étant sans état, la route n'existe pas et la
+  `RouteNotFoundException` était rendue en HTTP 500 au lieu de HTTP 401. Même cause pour
+  l'intergiciel `verified`, qui visait la route inexistante `verification.notice` : un compte
+  non vérifié recevait un HTTP 500 au lieu de 403. Correctif : intergiciel `ForceJsonResponse`
+  appliqué à tout le groupe `api`, redirection des visiteurs neutralisée et rendu JSON imposé
+  sur `/api/*`. Deux tests de non-régression ajoutés.
+
 ---
 
 ## [1.0.1] — Correctifs de maintenance
