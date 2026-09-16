@@ -5,6 +5,7 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import { useGameStore } from '@/stores/game'
 import { gameService } from '@/services/game.service'
+import { preloadImages } from '@/composables/useImagePreload'
 import {
   WORLD_MAP_IMAGE,
   WORLD_MAP_RATIO,
@@ -13,6 +14,7 @@ import {
 } from '@/config/worldMap'
 import CountryMarker from '@/components/game/CountryMarker.vue'
 import CountryOverlay from '@/components/game/CountryOverlay.vue'
+import LoadingVeil from '@/components/game/LoadingVeil.vue'
 
 const auth = useAuthStore()
 const game = useGameStore()
@@ -21,6 +23,7 @@ const toast = useToast()
 const mapImageMissing = ref(false)
 const selectedCountry = ref(null)
 const loading = ref(true)
+const progress = ref(0)
 const lastSeason = ref(null)
 
 const user = computed(() => auth.user)
@@ -37,6 +40,13 @@ onMounted(async () => {
       const { data } = await gameService.getLastSeason()
       lastSeason.value = data.data
     }
+
+    await preloadImages([
+      WORLD_MAP_IMAGE,
+      ...game.countries.map((country) => countryOverlayFor(country.slug)),
+    ], {
+      onProgress: (ratio) => (progress.value = ratio),
+    })
   } finally {
     loading.value = false
   }
@@ -73,6 +83,7 @@ async function joinSelected() {
 <template>
   <div class="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-iron-900">
     <div
+      v-if="!loading"
       class="world-map relative max-h-full max-w-full"
       :style="{ aspectRatio: WORLD_MAP_RATIO }"
     >
@@ -90,7 +101,7 @@ async function joinSelected() {
       >
         <span class="text-4xl">🗺️</span>
         <p class="max-w-xs text-sm text-parchment-100/70">
-          Ajoutez l'image <code class="text-gold-400">world-map.png</code> dans
+          Ajoutez l'image <code class="text-gold-400">world-map.webp</code> dans
           <code class="text-gold-400">frontend/public/</code> pour afficher la carte.
         </p>
       </div>
@@ -161,12 +172,7 @@ async function joinSelected() {
       </RouterLink>
     </div>
 
-    <div
-      v-if="loading"
-      class="absolute inset-0 z-30 flex items-center justify-center bg-iron-900/70 backdrop-blur-sm"
-    >
-      <p class="animate-pulse font-heading text-xl text-gold-400">Déploiement de la carte…</p>
-    </div>
+    <LoadingVeil :show="loading" :progress="progress" label="Déploiement de la carte…" />
 
     <transition name="panel">
       <aside
