@@ -40,7 +40,9 @@
   }
 
   .flag-btn {
-    @apply flex h-10 w-10 items-center justify-center rounded-md border border-iron-700 bg-iron-800/70 text-lg transition hover:bg-iron-700;
+    /* Largeur libre : le bouton porte une icone suivie du code de langue,
+       plus le carre de 40 px que demandait un drapeau seul. */
+    @apply flex h-10 items-center justify-center gap-1.5 rounded-md border border-iron-700 bg-iron-800/70 px-2.5 text-sm font-semibold transition hover:bg-iron-700;
   }
 
   .input {

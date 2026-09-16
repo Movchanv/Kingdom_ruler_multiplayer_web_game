@@ -4,6 +4,7 @@ import { useToast } from 'vue-toastification'
 import { useGameStore } from '@/stores/game'
 import { gameService } from '@/services/game.service'
 import { buildingMeta, resourceIcon, resourceLabel, bonusLabel } from '@/config/townBuildings'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps({
   building: { type: Object, required: true },
@@ -40,7 +41,7 @@ async function produce() {
     const result = await game.performAction(meta.value.action)
 
     const gains = result.resources
-      .map((r) => `+${r.gained} ${resourceIcon(r.key)} ${r.name}`)
+      .map((r) => `+${r.gained} ${r.name}`)
       .join(' · ')
     toast.success(`${gains} · +${result.xp_gained} XP`)
   } catch {
@@ -53,10 +54,10 @@ async function contribute() {
     const result = await game.build(live.value.id)
 
     if (result.leveled_up) {
-      toast.success(`🎉 ${live.value.name} passe au niveau ${result.level} !`)
+      toast.success(`${live.value.name} passe au niveau ${result.level} !`)
     } else {
       const spent = Object.entries(result.spent)
-        .map(([key, qty]) => `${qty} ${resourceIcon(key)}`)
+        .map(([key, qty]) => `${qty} ${resourceLabel(key)}`)
         .join(' · ')
       toast.success(`Travaux avancés : ${spent} investis · +${result.xp_gained} XP`)
     }
@@ -140,7 +141,7 @@ async function castBallot(optionId) {
       <!-- En-tête -->
       <div class="flex items-start justify-between gap-4">
         <div class="flex items-center gap-3">
-          <span class="text-4xl">{{ meta.icon }}</span>
+          <AppIcon :name="meta.icon" class="text-4xl" />
           <div>
             <h2 class="font-heading text-xl text-gold-400">{{ live.name }}</h2>
             <p class="text-xs text-parchment-100/70">
@@ -154,7 +155,7 @@ async function castBallot(optionId) {
           aria-label="Fermer"
           @click="emit('close')"
         >
-          ✕
+          <AppIcon name="fermer" />
         </button>
       </div>
 
@@ -171,7 +172,7 @@ async function castBallot(optionId) {
           :disabled="game.acting || noActionsLeft"
           @click="produce"
         >
-          {{ meta.actionLabel }} (1 ⚡)
+          {{ meta.actionLabel }} (1 <AppIcon name="action" />)
         </button>
         <p v-if="noActionsLeft" class="mt-1 text-center text-xs text-red-400">
           Plus d'actions aujourd'hui — revenez demain !
@@ -193,7 +194,9 @@ async function castBallot(optionId) {
             :key="law.name"
             class="rounded-md border border-gold-400/30 bg-gold-500/5 px-3 py-2"
           >
-            <p class="text-sm font-semibold text-parchment-100">📜 {{ law.name }}</p>
+            <p class="flex items-center gap-1.5 text-sm font-semibold text-parchment-100">
+              <AppIcon name="loi" /> {{ law.name }}
+            </p>
             <p class="text-xs text-gold-400/90">{{ lawBonusText(law) }}</p>
           </li>
         </ul>
@@ -212,8 +215,8 @@ async function castBallot(optionId) {
         </p>
 
         <div v-else class="mt-2 space-y-2">
-          <p v-if="remainingLabel" class="text-xs font-semibold text-gold-400">
-            ⏳ {{ remainingLabel }}
+          <p v-if="remainingLabel" class="flex items-center gap-1.5 text-xs font-semibold text-gold-400">
+            <AppIcon name="sablier" /> {{ remainingLabel }}
           </p>
           <div
             v-for="option in vote.options"
@@ -254,15 +257,17 @@ async function castBallot(optionId) {
           Amélioration
         </h3>
 
-        <p v-if="isMaxLevel" class="mt-2 text-sm text-gold-400">
-          🏆 Niveau maximum atteint.
+        <p v-if="isMaxLevel" class="mt-2 flex items-center gap-1.5 text-sm text-gold-400">
+          <AppIcon name="victoire" /> Niveau maximum atteint.
         </p>
 
         <template v-else>
           <div class="mt-2 space-y-2">
             <div v-for="row in upgradeRows" :key="row.key">
               <div class="flex items-center justify-between text-xs text-parchment-100/80">
-                <span>{{ resourceIcon(row.key) }} {{ resourceLabel(row.key) }}</span>
+                <span class="flex items-center gap-1.5">
+                  <AppIcon :name="resourceIcon(row.key)" /> {{ resourceLabel(row.key) }}
+                </span>
                 <span>{{ row.done }} / {{ row.required }}</span>
               </div>
               <div class="mt-0.5 h-2 overflow-hidden rounded-full bg-iron-800">
@@ -280,7 +285,7 @@ async function castBallot(optionId) {
             :disabled="game.acting || noActionsLeft"
             @click="contribute"
           >
-            🏗️ Contribuer aux travaux (1 ⚡)
+            <AppIcon name="chantier" /> Contribuer aux travaux (1 <AppIcon name="action" />)
           </button>
           <p class="mt-1 text-center text-xs text-parchment-100/50">
             Les ressources de la ville financent le chantier — l'effort est collectif.

@@ -1,39 +1,39 @@
 export const BUILDING_META = {
   town_hall: {
-    icon: '🏛️',
+    icon: 'hotel-de-ville',
     special: 'laws',
     description: "Le cœur du royaume : on y vote les lois qui renforcent la ville.",
   },
   farm: {
-    icon: '🌾',
+    icon: 'ferme',
     action: 'harvest_food',
     actionLabel: 'Récolter du blé',
     produces: 'food',
     description: 'Les champs nourrissent la population et les soldats.',
   },
   forest: {
-    icon: '🌲',
+    icon: 'foret',
     action: 'harvest_wood',
     actionLabel: 'Couper du bois',
     produces: 'wood',
     description: 'Le bois alimente les chantiers de la ville.',
   },
   mine: {
-    icon: '⛏️',
+    icon: 'mine',
     action: 'harvest_stone',
     actionLabel: 'Extraire de la pierre',
     produces: 'stone',
     description: 'La pierre des montagnes bâtit les murailles.',
   },
   barracks: {
-    icon: '⚔️',
+    icon: 'caserne',
     action: 'recruit_soldiers',
     actionLabel: 'Recruter des soldats',
     produces: 'soldiers',
     description: 'Les troupes défendent la ville… mais réclament leur solde.',
   },
   market: {
-    icon: '🪙',
+    icon: 'marche',
     action: 'mine_gold',
     actionLabel: "Percevoir l'or du marché",
     produces: 'gold',
@@ -42,7 +42,7 @@ export const BUILDING_META = {
 }
 
 export function buildingMeta(key) {
-  return BUILDING_META[key] ?? { icon: '🏚️', description: '' }
+  return BUILDING_META[key] ?? { icon: 'ruine', description: '' }
 }
 
 export const BUILDING_IMAGES = {
@@ -68,18 +68,19 @@ export function townEmblemFor(name) {
   return TOWN_EMBLEMS[name] ?? null
 }
 
+/** Nom d'icone (voir src/config/icons.js) et non plus un emoji. */
 export const RESOURCE_ICONS = {
-  gold: '🪙',
-  food: '🍞',
-  wood: '🪵',
-  stone: '🪨',
-  soldiers: '⚔️',
-  iron: '⛓️',
-  coal: '🧱',
+  gold: 'or',
+  food: 'ble',
+  wood: 'bois',
+  stone: 'pierre',
+  soldiers: 'soldats',
+  iron: 'fer',
+  coal: 'charbon',
 }
 
 export function resourceIcon(key) {
-  return RESOURCE_ICONS[key] ?? '📦'
+  return RESOURCE_ICONS[key] ?? 'ressource'
 }
 
 const RESOURCE_NAMES = {

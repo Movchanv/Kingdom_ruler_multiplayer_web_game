@@ -65,7 +65,7 @@ function close() {
     aria-label="Signaler un problème"
     @click="open = true"
   >
-    🐞
+    <AppIcon name="anomalie" />
   </button>
 
   <div v-if="open" class="fixed inset-0 z-40 flex items-center justify-center p-4">
@@ -76,7 +76,7 @@ function close() {
     >
       <div class="flex items-start justify-between gap-4">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">🐞</span>
+          <AppIcon name="anomalie" class="text-3xl" />
           <div>
             <h2 class="font-heading text-lg text-gold-400">Signaler un problème</h2>
             <p class="text-xs text-parchment-100/70">Votre retour aide à améliorer le jeu.</p>
@@ -88,7 +88,7 @@ function close() {
           aria-label="Fermer"
           @click="close"
         >
-          ✕
+          <AppIcon name="fermer" />
         </button>
       </div>
 

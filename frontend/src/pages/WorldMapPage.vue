@@ -12,6 +12,7 @@ import {
   positionFor,
   countryOverlayFor,
 } from '@/config/worldMap'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import CountryMarker from '@/components/game/CountryMarker.vue'
 import CountryOverlay from '@/components/game/CountryOverlay.vue'
 import LoadingVeil from '@/components/game/LoadingVeil.vue'
@@ -99,7 +100,7 @@ async function joinSelected() {
         v-else
         class="flex h-full w-full flex-col items-center justify-center gap-2 border border-iron-700 bg-gradient-to-b from-iron-800 to-iron-900 text-center"
       >
-        <span class="text-4xl">🗺️</span>
+        <AppIcon name="carte" class="text-4xl" />
         <p class="max-w-xs text-sm text-parchment-100/70">
           Ajoutez l'image <code class="text-gold-400">world-map.webp</code> dans
           <code class="text-gold-400">frontend/public/</code> pour afficher la carte.
@@ -136,22 +137,26 @@ async function joinSelected() {
           v-if="user"
           class="flex items-center gap-2 rounded-md border border-iron-700 bg-iron-900/80 px-3 py-1.5 backdrop-blur-sm"
         >
-          <span class="text-gold-400">⚔️</span>
+          <AppIcon name="soldats" class="text-gold-400" />
           <span class="text-sm text-parchment-100">{{ user.username }}</span>
           <span v-if="user.title" class="rounded bg-gold-500/15 px-1.5 py-0.5 text-xs text-gold-400">
             {{ user.title }}
           </span>
           <span class="text-xs text-parchment-100/60">{{ user.xp }} XP</span>
         </div>
-        <RouterLink v-if="user?.role === 'admin'" :to="{ name: 'admin' }" class="btn-ghost">
-          ⚙️ Admin
+        <RouterLink
+          v-if="user?.role === 'admin'"
+          :to="{ name: 'admin' }"
+          class="btn-ghost inline-flex items-center gap-1.5"
+        >
+          <AppIcon name="reglages" /> Admin
         </RouterLink>
         <RouterLink
           v-if="['researcher', 'admin'].includes(user?.role)"
           :to="{ name: 'research' }"
-          class="btn-ghost"
+          class="btn-ghost inline-flex items-center gap-1.5"
         >
-          🔬 Recherche
+          <AppIcon name="recherche" /> Recherche
         </RouterLink>
         <button type="button" class="btn-ghost" @click="auth.logout()">Déconnexion</button>
       </div>
@@ -167,7 +172,7 @@ async function joinSelected() {
         :to="{ name: 'season-results', params: { id: lastSeason.id } }"
         class="pointer-events-auto mt-3 inline-flex items-center gap-2 rounded-md border border-gold-400/50 bg-iron-900/85 px-4 py-2 text-sm text-parchment-100 shadow-lg backdrop-blur transition hover:border-gold-400"
       >
-        🏁 Votre saison « {{ lastSeason.name }} » est terminée —
+        <AppIcon name="fin-de-saison" /> Votre saison « {{ lastSeason.name }} » est terminée —
         <span class="text-gold-400">voir le classement</span>
       </RouterLink>
     </div>
@@ -197,7 +202,7 @@ async function joinSelected() {
               aria-label="Fermer"
               @click="selectedCountry = null"
             >
-              ✕
+              <AppIcon name="fermer" />
             </button>
           </div>
 
@@ -218,7 +223,8 @@ async function joinSelected() {
 
             <div v-else-if="selectedVariant === 'mine'" class="space-y-2 text-center">
               <p class="text-sm text-parchment-100/80">
-                👑 Vous servez ce royaume<template v-if="game.town"> — vous êtes à
+                <AppIcon name="couronne" /> Vous servez ce royaume<template v-if="game.town">
+                  — vous êtes à
                   <span class="text-gold-400">{{ game.town.name }}</span></template>.
               </p>
               <RouterLink :to="{ name: 'kingdom' }" class="btn-gold w-full">

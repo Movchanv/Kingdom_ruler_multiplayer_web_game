@@ -5,6 +5,7 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import { adminService } from '@/services/admin.service'
 import { supportService } from '@/services/support.service'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { bonusLabel } from '@/config/townBuildings'
 
 const auth = useAuthStore()
@@ -27,7 +28,7 @@ const events = ref([])
 const emptyEventForm = () => ({
   name: '',
   description: '',
-  icon: '⚔️',
+  icon: 'raid',
   type: 'world',
   difficulty: 'medium',
   effect_key_1: 'gold',
@@ -311,7 +312,9 @@ function lawBonusText(law) {
     <div class="mx-auto max-w-3xl">
       <header class="flex items-center justify-between">
         <RouterLink to="/play" class="btn-ghost">← Retour au jeu</RouterLink>
-        <h1 class="font-heading text-2xl text-gold-400">⚙️ Administration</h1>
+        <h1 class="flex items-center gap-2 font-heading text-2xl text-gold-400">
+          <AppIcon name="reglages" /> Administration
+        </h1>
         <button type="button" class="btn-ghost" @click="auth.logout()">Déconnexion</button>
       </header>
 
@@ -321,7 +324,9 @@ function lawBonusText(law) {
 
       <template v-else>
         <section class="mt-6 rounded-lg border border-gold-400/30 bg-iron-800/50 p-5">
-          <h2 class="font-heading text-lg text-gold-400">📜 Lancer un vote de loi</h2>
+          <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+            <AppIcon name="loi" /> Lancer un vote de loi
+          </h2>
           <p class="mt-1 text-sm text-parchment-100/70">
             Choisissez <strong class="text-gold-400">exactement 3 lois</strong> : les joueurs du
             royaume auront {{ hours }} h pour élire la leur. À l'échéance, la loi la plus votée
@@ -381,12 +386,15 @@ function lawBonusText(law) {
             :disabled="!canLaunch || launching"
             @click="launchVote"
           >
-            {{ launching ? 'Proclamation…' : `⏳ Lancer le vote (${hours} h)` }}
+            <template v-if="launching">Proclamation…</template>
+            <template v-else><AppIcon name="sablier" /> Lancer le vote ({{ hours }} h)</template>
           </button>
         </section>
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
-          <h2 class="font-heading text-lg text-gold-400">🖋️ Créer une loi</h2>
+          <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+            <AppIcon name="plume" /> Créer une loi
+          </h2>
 
           <form class="mt-4 grid gap-3 sm:grid-cols-2" @submit.prevent="createLaw">
             <label class="block sm:col-span-2">
@@ -447,7 +455,9 @@ function lawBonusText(law) {
         </section>
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
-          <h2 class="font-heading text-lg text-gold-400">⚡ Créer un événement</h2>
+          <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+            <AppIcon name="action" /> Créer un événement
+          </h2>
           <p class="mt-1 text-xs text-parchment-100/60">
             Les événements de type « Monde » sont tirés automatiquement selon la pression de la
             saison ; leurs effets sont alors amplifiés jusqu'au double.
@@ -509,8 +519,8 @@ function lawBonusText(law) {
               <input
                 v-model="eventForm.icon"
                 type="text"
-                maxlength="4"
-                placeholder="🪓"
+                maxlength="32"
+                placeholder="raid, incendie, secheresse…"
                 class="input mt-1"
               />
             </label>
@@ -745,7 +755,8 @@ function lawBonusText(law) {
                     :disabled="!triggerTownId || triggeringEventId === event.id"
                     @click="triggerEvent(event)"
                   >
-                    {{ triggeringEventId === event.id ? 'Déclenchement…' : '⚡ Déclencher' }}
+                    <template v-if="triggeringEventId === event.id">Déclenchement…</template>
+                    <template v-else><AppIcon name="action" /> Déclencher</template>
                   </button>
                 </div>
                 <p class="mt-1 text-xs text-parchment-100/60">{{ eventEffectsText(event) }}</p>
@@ -756,7 +767,9 @@ function lawBonusText(law) {
 
         <section v-if="monitoring" class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="font-heading text-lg text-gold-400">📡 Supervision</h2>
+            <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+              <AppIcon name="supervision" /> Supervision
+            </h2>
             <div class="flex items-center gap-2">
               <span
                 class="rounded-full border px-2 py-0.5 text-xs font-semibold"
@@ -766,7 +779,10 @@ function lawBonusText(law) {
                     : 'border-red-400/50 bg-red-400/10 text-red-300'
                 "
               >
-                {{ monitoring.status === 'ok' ? '● Opérationnel' : '▲ Dégradé' }}
+                <template v-if="monitoring.status === 'ok'">
+                  <AppIcon name="operationnel" /> Opérationnel
+                </template>
+                <template v-else><AppIcon name="degrade" /> Dégradé</template>
               </span>
               <button type="button" class="btn-ghost !px-3 !py-1 text-sm" @click="refreshMonitoring">
                 Actualiser
@@ -780,7 +796,7 @@ function lawBonusText(law) {
               :key="i"
               class="rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-300"
             >
-              ▲ {{ alert.message }}
+              <AppIcon name="degrade" /> {{ alert.message }}
             </li>
           </ul>
 
@@ -790,7 +806,7 @@ function lawBonusText(law) {
               :key="name"
               class="rounded-lg border border-iron-700 bg-iron-900/60 p-3 text-center"
             >
-              <p class="text-xl">{{ up ? '✅' : '❌' }}</p>
+              <AppIcon :name="up ? 'succes' : 'echec'" class="text-xl" />
               <p class="mt-0.5 text-xs text-parchment-100/70">{{ DEPENDENCY_LABELS[name] ?? name }}</p>
             </div>
 
@@ -829,7 +845,9 @@ function lawBonusText(law) {
         </section>
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
-          <h2 class="font-heading text-lg text-gold-400">🐞 Anomalies consignées</h2>
+          <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+            <AppIcon name="anomalie" /> Anomalies consignées
+          </h2>
 
           <p v-if="reports.length === 0" class="mt-3 text-sm text-parchment-100/60">
             Aucune anomalie signalée pour le moment.

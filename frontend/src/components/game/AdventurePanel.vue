@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { resourceIcon } from '@/config/townBuildings'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const emit = defineEmits(['close'])
 
@@ -30,11 +31,14 @@ async function embark() {
   }
 }
 
+function effectIcon(effect) {
+  return effect.key === 'loyalty' ? 'loyaute' : resourceIcon(effect.key)
+}
+
 function effectLabel(effect) {
-  const icon = effect.key === 'loyalty' ? '❤️' : resourceIcon(effect.key)
   const sign = effect.delta > 0 ? '+' : ''
 
-  return `${sign}${effect.delta} ${icon} ${effect.key === 'loyalty' ? 'loyauté' : effect.key}`
+  return `${sign}${effect.delta} ${effect.key === 'loyalty' ? 'loyauté' : effect.key}`
 }
 </script>
 
@@ -48,7 +52,7 @@ function effectLabel(effect) {
       <!-- En-tête -->
       <div class="flex items-start justify-between gap-4">
         <div class="flex items-center gap-3">
-          <span class="text-4xl">🐎</span>
+          <AppIcon name="aventure" class="text-4xl" />
           <div>
             <h2 class="font-heading text-xl text-gold-400">Partir à l'aventure</h2>
             <p class="text-xs text-parchment-100/70">Au-delà des portes de la ville…</p>
@@ -60,7 +64,7 @@ function effectLabel(effect) {
           aria-label="Fermer"
           @click="emit('close')"
         >
-          ✕
+          <AppIcon name="fermer" />
         </button>
       </div>
 
@@ -77,7 +81,8 @@ function effectLabel(effect) {
           :disabled="game.acting || noActionsLeft"
           @click="embark"
         >
-          {{ game.acting ? 'En chevauchée…' : "Partir à l'aventure (1 ⚡)" }}
+          <template v-if="game.acting">En chevauchée…</template>
+          <template v-else>Partir à l'aventure (1 <AppIcon name="action" />)</template>
         </button>
         <p v-if="noActionsLeft" class="mt-2 text-center text-xs text-red-400">
           Plus d'actions aujourd'hui — revenez demain !
@@ -106,27 +111,27 @@ function effectLabel(effect) {
             <span
               v-for="effect in result.effects"
               :key="effect.key"
-              class="rounded-md border px-2 py-1 text-sm"
+              class="flex items-center gap-1.5 rounded-md border px-2 py-1 text-sm"
               :class="
                 effect.delta >= 0
                   ? 'border-green-400/40 bg-green-400/10 text-green-300'
                   : 'border-red-400/40 bg-red-400/10 text-red-300'
               "
             >
-              {{ effectLabel(effect) }}
+              <AppIcon :name="effectIcon(effect)" /> {{ effectLabel(effect) }}
             </span>
 
             <span
               v-if="result.free_actions > 0"
               class="rounded-md border border-gold-400/40 bg-gold-400/10 px-2 py-1 text-sm text-gold-400"
             >
-              ⚡ +{{ result.free_actions }} action offerte
+              <AppIcon name="action" /> +{{ result.free_actions }} action offerte
             </span>
 
             <span
               class="rounded-md border border-royal-500/50 bg-royal-600/20 px-2 py-1 text-sm text-parchment-100"
             >
-              ✨ +{{ result.xp_gained }} XP
+              <AppIcon name="experience" /> +{{ result.xp_gained }} XP
             </span>
           </div>
         </div>
@@ -138,7 +143,8 @@ function effectLabel(effect) {
             :disabled="game.acting || noActionsLeft"
             @click="embark"
           >
-            {{ game.acting ? 'En chevauchée…' : 'Repartir (1 ⚡)' }}
+            <template v-if="game.acting">En chevauchée…</template>
+            <template v-else>Repartir (1 <AppIcon name="action" />)</template>
           </button>
           <button type="button" class="btn-ghost flex-1" @click="emit('close')">
             Rentrer en ville
