@@ -160,4 +160,43 @@ final class ResearchTest extends TestCase
             ->assertJsonPath('data.0.ranking.0.subject', $expected)
             ->assertJsonMissingPath('data.0.ranking.0.user_id');
     }
+
+    /**
+     * Non-regression : une URL d'API ouverte depuis un navigateur (en-tete
+     * Accept: text/html, cas du chercheur qui colle l'adresse dans sa barre)
+     * declenchait une redirection vers la route « login ». Cette route n'existe
+     * pas sur une API sans etat : la RouteNotFoundException etait rendue en
+     * HTTP 500 au lieu du HTTP 401 attendu.
+     */
+    public function test_a_browser_request_without_a_token_is_rejected_with_401(): void
+    {
+        $urls = [
+            '/api/v1/research/overview',
+            '/api/v1/research/actions',
+            '/api/v1/research/seasons',
+            '/api/v1/research/exports/actions',
+            '/api/v1/research/exports/seasons',
+        ];
+
+        foreach ($urls as $url) {
+            $this->get($url, ['Accept' => 'text/html,application/xhtml+xml'])
+                ->assertUnauthorized()
+                ->assertJsonStructure(['message']);
+        }
+    }
+
+    /**
+     * Meme cause pour l'intergiciel « verified », qui redirigeait vers la route
+     * inexistante verification.notice : un compte non verifie doit recevoir un
+     * HTTP 403, y compris depuis un navigateur.
+     */
+    public function test_a_browser_request_from_an_unverified_account_is_rejected_with_403(): void
+    {
+        Sanctum::actingAs(
+            User::factory()->unverified()->create(['role' => UserRole::Researcher]),
+        );
+
+        $this->get('/api/v1/research/overview', ['Accept' => 'text/html'])
+            ->assertForbidden();
+    }
 }
