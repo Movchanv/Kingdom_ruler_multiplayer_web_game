@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useMouse, useWindowSize, onClickOutside } from '@vueuse/core'
 import { useAuthStore } from '@/stores/auth'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const auth = useAuthStore()
 const isAuthenticated = computed(() => auth.isAuthenticated)
@@ -25,12 +26,12 @@ const parallaxStyle = computed(() => {
   }
 })
 
-const languages = [{ code: 'fr', flag: '🇫🇷', label: 'Français' }]
+const languages = [{ code: 'fr', label: 'Français' }]
 const currentLang = ref('fr')
 const langMenuOpen = ref(false)
 const langRef = useTemplateRef('langRef')
 
-const currentFlag = computed(() => languages.find((l) => l.code === currentLang.value)?.flag ?? '🌐')
+const currentCode = computed(() => currentLang.value.toUpperCase())
 
 function selectLang(code) {
   currentLang.value = code
@@ -68,7 +69,7 @@ onClickOutside(langRef, () => {
           title="Langue"
           @click="langMenuOpen = !langMenuOpen"
         >
-          {{ currentFlag }}
+          <AppIcon name="langue" /> {{ currentCode }}
         </button>
 
         <ul
@@ -85,7 +86,7 @@ onClickOutside(langRef, () => {
               :aria-selected="lang.code === currentLang"
               @click="selectLang(lang.code)"
             >
-              <span>{{ lang.flag }}</span>
+              <span class="font-semibold">{{ lang.code.toUpperCase() }}</span>
               <span>{{ lang.label }}</span>
             </button>
           </li>

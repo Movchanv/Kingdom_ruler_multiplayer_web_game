@@ -7,6 +7,7 @@ import { useGameStore } from '@/stores/game'
 import { preloadImages } from '@/composables/useImagePreload'
 import { countryMapFor, toPercent, COUNTRY_MAP_RATIO } from '@/config/worldMap'
 import { townEmblemFor } from '@/config/townBuildings'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import TownMarker from '@/components/game/TownMarker.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
 import LoadingVeil from '@/components/game/LoadingVeil.vue'
@@ -82,7 +83,7 @@ async function travelToSelected() {
         v-else
         class="flex h-full w-full flex-col items-center justify-center gap-2 border border-iron-700 bg-gradient-to-b from-iron-800 to-iron-900 text-center"
       >
-        <span class="text-4xl">🗺️</span>
+        <AppIcon name="carte" class="text-4xl" />
         <p class="max-w-xs text-sm text-parchment-100/70">
           Carte du royaume introuvable pour
           <code class="text-gold-400">{{ country?.slug ?? '…' }}</code
@@ -111,7 +112,7 @@ async function travelToSelected() {
           v-if="user"
           class="flex items-center gap-2 rounded-md border border-iron-700 bg-iron-900/80 px-3 py-1.5 backdrop-blur-sm"
         >
-          <span class="text-gold-400">⚔️</span>
+          <AppIcon name="soldats" class="text-gold-400" />
           <span class="text-sm text-parchment-100">{{ user.username }}</span>
           <span v-if="user.title" class="rounded bg-gold-500/15 px-1.5 py-0.5 text-xs text-gold-400">
             {{ user.title }}
@@ -140,9 +141,11 @@ async function travelToSelected() {
             <div class="min-w-0 flex-1">
               <h2 class="font-heading text-xl text-gold-400">{{ selectedTown.name }}</h2>
               <div class="mt-2 space-y-1.5 text-sm text-parchment-100/80">
-                <p>👥 {{ selectedTown.population }} habitant(s)</p>
+                <p class="flex items-center gap-1.5">
+                  <AppIcon name="population" /> {{ selectedTown.population }} habitant(s)
+                </p>
                 <div class="flex items-center gap-2">
-                  <span>❤️</span>
+                  <AppIcon name="loyaute" />
                   <div class="h-2 flex-1 overflow-hidden rounded-full bg-iron-800">
                     <div
                       class="h-full rounded-full transition-all"
@@ -160,13 +163,15 @@ async function travelToSelected() {
               aria-label="Fermer"
               @click="selectedTown = null"
             >
-              ✕
+              <AppIcon name="fermer" />
             </button>
           </div>
 
           <div class="mt-4">
             <div v-if="selectedTown.is_current" class="space-y-2 text-center">
-              <p class="text-sm text-parchment-100/80">📍 Vous êtes dans cette ville.</p>
+              <p class="flex items-center justify-center gap-1.5 text-sm text-parchment-100/80">
+                <AppIcon name="position" /> Vous êtes dans cette ville.
+              </p>
               <RouterLink :to="{ name: 'town' }" class="btn-gold w-full">
                 Entrer dans la ville
               </RouterLink>

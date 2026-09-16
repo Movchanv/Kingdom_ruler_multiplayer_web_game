@@ -15,6 +15,7 @@ import {
   ADVENTURE_IMAGE,
 } from '@/config/townBuildings'
 import { rectFor } from '@/config/townRects'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BuildingMarker from '@/components/game/BuildingMarker.vue'
 import BuildingHotspot from '@/components/game/BuildingHotspot.vue'
 import BuildingPanel from '@/components/game/BuildingPanel.vue'
@@ -128,7 +129,7 @@ const adventureHotspot = computed(() => {
         v-else
         class="flex h-full w-full flex-col items-center justify-center gap-2 border border-iron-700 bg-gradient-to-b from-iron-800 to-iron-900 text-center"
       >
-        <span class="text-4xl">🏰</span>
+        <AppIcon name="chateau" class="text-4xl" />
         <p class="max-w-xs text-sm text-parchment-100/70">
           Image de ville introuvable pour
           <code class="text-gold-400">{{ town?.name ?? '…' }}</code
@@ -174,7 +175,7 @@ const adventureHotspot = computed(() => {
         @click="adventureOpen = true"
       >
         <span class="badge">
-          <span class="text-2xl leading-none drop-shadow">🐎</span>
+          <AppIcon name="aventure" class="text-2xl drop-shadow" />
         </span>
         <span class="nameplate">Aventure</span>
       </button>
@@ -198,7 +199,7 @@ const adventureHotspot = computed(() => {
           v-if="user"
           class="flex items-center gap-2 rounded-md border border-iron-700 bg-iron-900/80 px-3 py-1.5 backdrop-blur-sm"
         >
-          <span class="text-gold-400">⚔️</span>
+          <AppIcon name="soldats" class="text-gold-400" />
           <span class="text-sm text-parchment-100">{{ user.username }}</span>
           <span v-if="user.title" class="rounded bg-gold-500/15 px-1.5 py-0.5 text-xs text-gold-400">
             {{ user.title }}
@@ -228,7 +229,7 @@ const adventureHotspot = computed(() => {
         <span class="h-4 w-px bg-iron-700" />
 
         <span class="flex items-center gap-1 text-sm text-parchment-100" title="Loyauté de la ville">
-          ❤️ {{ town.loyalty }}%
+          <AppIcon name="loyaute" /> {{ town.loyalty }}%
         </span>
 
         <span class="h-4 w-px bg-iron-700" />
@@ -238,7 +239,8 @@ const adventureHotspot = computed(() => {
           :class="game.player?.actions_remaining > 0 ? 'text-gold-400' : 'text-red-400'"
           title="Actions restantes aujourd'hui"
         >
-          ⚡ {{ game.player?.actions_remaining ?? 0 }}/{{ game.player?.daily_actions ?? 5 }}
+          <AppIcon name="action" />
+          {{ game.player?.actions_remaining ?? 0 }}/{{ game.player?.daily_actions ?? 5 }}
         </span>
       </div>
     </div>

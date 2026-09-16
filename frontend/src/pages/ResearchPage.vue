@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { researchService } from '@/services/research.service'
 
 const auth = useAuthStore()
@@ -26,11 +27,11 @@ const JSON_ENDPOINTS = [
 const stats = computed(() =>
   overview.value
     ? [
-        { label: 'Comptes consentants', value: overview.value.accounts, icon: '👤' },
-        { label: 'Saisons actives', value: overview.value.seasons.active, icon: '⚔️' },
-        { label: 'Saisons terminées', value: overview.value.seasons.ended, icon: '🏁' },
-        { label: 'Actions jouées', value: overview.value.actions_total, icon: '⚡' },
-        { label: 'XP total distribué', value: overview.value.xp_total, icon: '✨' },
+        { label: 'Comptes consentants', value: overview.value.accounts, icon: 'compte' },
+        { label: 'Saisons actives', value: overview.value.seasons.active, icon: 'soldats' },
+        { label: 'Saisons terminées', value: overview.value.seasons.ended, icon: 'fin-de-saison' },
+        { label: 'Actions jouées', value: overview.value.actions_total, icon: 'action' },
+        { label: 'XP total distribué', value: overview.value.xp_total, icon: 'experience' },
       ]
     : [],
 )
@@ -88,7 +89,9 @@ function endedDate(season) {
     <div class="mx-auto max-w-3xl">
       <header class="flex items-center justify-between">
         <RouterLink to="/play" class="btn-ghost">← Retour au jeu</RouterLink>
-        <h1 class="font-heading text-2xl text-gold-400">🔬 Espace chercheurs</h1>
+        <h1 class="flex items-center gap-2 font-heading text-2xl text-gold-400">
+          <AppIcon name="recherche" /> Espace chercheurs
+        </h1>
         <button type="button" class="btn-ghost" @click="auth.logout()">Déconnexion</button>
       </header>
 
@@ -107,7 +110,7 @@ function endedDate(season) {
             :key="stat.label"
             class="rounded-lg border border-iron-700 bg-iron-800/50 p-3 text-center"
           >
-            <p class="text-xl">{{ stat.icon }}</p>
+            <AppIcon :name="stat.icon" class="text-xl" />
             <p class="font-heading text-xl text-gold-400">{{ stat.value }}</p>
             <p class="mt-0.5 text-[11px] leading-tight text-parchment-100/60">{{ stat.label }}</p>
           </div>
@@ -115,14 +118,17 @@ function endedDate(season) {
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="font-heading text-lg text-gold-400">⚡ Usage des actions</h2>
+            <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+              <AppIcon name="action" /> Usage des actions
+            </h2>
             <button
               type="button"
               class="btn-gold !px-3 !py-1.5 text-sm"
               :disabled="downloading === 'actions'"
               @click="download('actions')"
             >
-              {{ downloading === 'actions' ? 'Export…' : '⬇️ Exporter (Excel)' }}
+              <template v-if="downloading === 'actions'">Export…</template>
+              <template v-else><AppIcon name="telecharger" /> Exporter (Excel)</template>
             </button>
           </div>
 
@@ -150,14 +156,17 @@ function endedDate(season) {
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="font-heading text-lg text-gold-400">🏁 Saisons terminées</h2>
+            <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+              <AppIcon name="fin-de-saison" /> Saisons terminées
+            </h2>
             <button
               type="button"
               class="btn-gold !px-3 !py-1.5 text-sm"
               :disabled="downloading === 'seasons' || seasons.length === 0"
               @click="download('seasons')"
             >
-              {{ downloading === 'seasons' ? 'Export…' : '⬇️ Exporter (Excel)' }}
+              <template v-if="downloading === 'seasons'">Export…</template>
+              <template v-else><AppIcon name="telecharger" /> Exporter (Excel)</template>
             </button>
           </div>
 
@@ -196,7 +205,9 @@ function endedDate(season) {
         </section>
 
         <section class="mt-6 rounded-lg border border-iron-700 bg-iron-800/50 p-5">
-          <h2 class="font-heading text-lg text-gold-400">🔌 Accès API (JSON)</h2>
+          <h2 class="flex items-center gap-2 font-heading text-lg text-gold-400">
+            <AppIcon name="api" /> Accès API (JSON)
+          </h2>
           <p class="mt-1 text-sm text-parchment-100/70">
             Les mêmes jeux de données sont accessibles par script (R, Python…) avec un jeton
             Bearer obtenu via <code class="text-gold-400">POST /auth/login</code> :
