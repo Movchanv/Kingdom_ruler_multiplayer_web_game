@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { buildingMeta } from '@/config/townBuildings'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps({
   building: { type: Object, required: true },
@@ -28,7 +29,7 @@ const markerStyle = computed(() => ({
     @click="$emit('select', building)"
   >
     <span class="badge">
-      <span class="text-2xl leading-none drop-shadow">{{ meta.icon }}</span>
+      <AppIcon :name="meta.icon" class="text-2xl drop-shadow" />
       <span class="level">{{ building.level }}</span>
     </span>
     <span class="nameplate">{{ building.name }}</span>

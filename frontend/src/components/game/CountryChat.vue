@@ -120,14 +120,16 @@ function timeOf(message) {
       class="flex h-96 w-80 flex-col overflow-hidden rounded-lg border border-gold-400/40 bg-iron-900/95 shadow-2xl backdrop-blur"
     >
       <div class="flex items-center justify-between border-b border-iron-700 px-3 py-2">
-        <h3 class="font-heading text-sm text-gold-400">💬 Chat {{ countryName }}</h3>
+        <h3 class="flex items-center gap-1.5 font-heading text-sm text-gold-400">
+          <AppIcon name="discussion" /> Chat {{ countryName }}
+        </h3>
         <button
           type="button"
           class="text-parchment-100/50 transition hover:text-parchment-100"
           aria-label="Fermer le chat"
           @click="toggle"
         >
-          ✕
+          <AppIcon name="fermer" />
         </button>
       </div>
 
@@ -144,7 +146,7 @@ function timeOf(message) {
         >
           <!-- Message système -->
           <p v-if="message.type === 'system'" class="text-xs italic text-gold-400/80">
-            📯 {{ message.body }}
+            <AppIcon name="annonce" /> {{ message.body }}
           </p>
 
           <!-- Message joueur -->
@@ -180,8 +182,13 @@ function timeOf(message) {
           placeholder="Votre message…"
           class="input !py-1.5 text-sm"
         />
-        <button type="submit" class="btn-gold !px-3 !py-1.5 text-sm" :disabled="sending || !body.trim()">
-          ➤
+        <button
+          type="submit"
+          class="btn-gold !px-3 !py-1.5 text-sm"
+          aria-label="Envoyer le message"
+          :disabled="sending || !body.trim()"
+        >
+          <AppIcon name="envoyer" />
         </button>
       </form>
     </div>
@@ -191,9 +198,10 @@ function timeOf(message) {
       type="button"
       class="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-gold-400/60 bg-iron-900/90 text-xl shadow-xl backdrop-blur transition hover:border-gold-400 hover:shadow-gold-400/30"
       :title="open ? 'Fermer le chat' : 'Chat du royaume'"
+      :aria-label="open ? 'Fermer le chat' : 'Chat du royaume'"
       @click="toggle"
     >
-      💬
+      <AppIcon name="discussion" />
       <span
         v-if="unread > 0"
         class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps({
   country: { type: Object, required: true },
@@ -16,7 +17,7 @@ const markerStyle = computed(() => ({
   top: `${props.position.y}%`,
 }))
 
-const icon = computed(() => (props.variant === 'mine' ? '👑' : '🏰'))
+const icon = computed(() => (props.variant === 'mine' ? 'couronne' : 'chateau'))
 </script>
 
 <template>
@@ -29,7 +30,7 @@ const icon = computed(() => (props.variant === 'mine' ? '👑' : '🏰'))
     @click="$emit('select', country)"
   >
     <span class="badge">
-      <span class="text-2xl leading-none drop-shadow">{{ icon }}</span>
+      <AppIcon :name="icon" class="text-2xl drop-shadow" />
     </span>
     <span class="nameplate">{{ country.name }}</span>
   </button>
