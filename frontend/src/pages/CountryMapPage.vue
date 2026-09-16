@@ -4,10 +4,12 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import { useGameStore } from '@/stores/game'
+import { preloadImages } from '@/composables/useImagePreload'
 import { countryMapFor, toPercent, COUNTRY_MAP_RATIO } from '@/config/worldMap'
 import { townEmblemFor } from '@/config/townBuildings'
 import TownMarker from '@/components/game/TownMarker.vue'
 import CountryChat from '@/components/game/CountryChat.vue'
+import LoadingVeil from '@/components/game/LoadingVeil.vue'
 
 const auth = useAuthStore()
 const game = useGameStore()
@@ -17,6 +19,7 @@ const toast = useToast()
 const mapImageMissing = ref(false)
 const selectedTown = ref(null)
 const loading = ref(true)
+const progress = ref(0)
 
 const user = computed(() => auth.user)
 const country = computed(() => game.player?.country ?? null)
@@ -32,6 +35,13 @@ onMounted(async () => {
     }
 
     await game.fetchTowns()
+
+    await preloadImages([
+      mapImage.value,
+      ...game.towns.map((town) => townEmblemFor(town.name)),
+    ], {
+      onProgress: (ratio) => (progress.value = ratio),
+    })
   } finally {
     loading.value = false
   }
@@ -55,7 +65,11 @@ async function travelToSelected() {
 
 <template>
   <div class="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-iron-900">
-    <div class="relative max-h-full max-w-full" :style="{ aspectRatio: COUNTRY_MAP_RATIO }">
+    <div
+      v-if="!loading"
+      class="relative max-h-full max-w-full"
+      :style="{ aspectRatio: COUNTRY_MAP_RATIO }"
+    >
       <img
         v-if="mapImage && !mapImageMissing"
         :src="mapImage"
@@ -117,12 +131,7 @@ async function travelToSelected() {
       </p>
     </div>
 
-    <div
-      v-if="loading"
-      class="absolute inset-0 z-30 flex items-center justify-center bg-iron-900/70 backdrop-blur-sm"
-    >
-      <p class="animate-pulse font-heading text-xl text-gold-400">Chevauchée vers le royaume…</p>
-    </div>
+    <LoadingVeil :show="loading" :progress="progress" label="Chevauchée vers le royaume…" />
 
     <transition name="panel">
       <aside v-if="selectedTown" class="absolute inset-x-0 bottom-0 z-20 mx-auto w-full max-w-lg p-4">
